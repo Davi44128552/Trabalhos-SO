@@ -14,9 +14,18 @@ int bg_count = 0;
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
 void parse_command(char *input, char **args, int *background) {
-    // TODO: Implementar parsing do comando
-    // Dividir a string em argumentos
-    // Verificar se termina com &
+    int argc = 0; // Posicao dos argumentos
+    char *token = strtok(input, " \t");
+
+    // Lendo o comando e seus argumentos
+    while (token != NULL && argc < MAX_ARGS){
+        argc++; // Incrementando argc para a sua proxima posicao
+        args[argc] = token; // Definindo este argumento pelo token lido por strtok
+        token = strtok(NULL, " \t"); // Pegando o proximo argumento 
+    }
+
+    // Definindo o último argumento como Null para o exec
+    args[argc] = NULL;
 }
 
 void execute_command(char **args, int background) {
