@@ -11,7 +11,6 @@
 // Array para armazenar PIDs de processos em background
 pid_t bg_processes[10];
 int bg_count = 0;
-int loop = 1;
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
 void parse_command(char *input, char **args, int *background) {
@@ -56,7 +55,8 @@ void handle_internal_command(char **args) {
     
     // Caso o comando recebido tenha sido "exit"
     if (strcmp(args[0], "exit") == 0){
-        loop = 0;
+        printf("Shell encerrado!\n");
+        exit(0); // Simplesmente encerramos o programa e retornamos 0
     }
 
 }
@@ -69,7 +69,7 @@ int main() {
     printf("Mini-Shell iniciado (PID: %d)\n", getpid());
     printf("Digite 'exit' para sair\n\n");
 
-    while (loop == 1) {
+    while (1) {
         printf("minishell> ");
         fflush(stdout);
 
@@ -98,8 +98,5 @@ int main() {
             execute_command(args, background);
         }
     }
-
-    printf("Shell encerrado!\n");
-    return EXIT_SUCCESS;
 
 }
