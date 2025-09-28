@@ -29,9 +29,42 @@ void parse_command(char *input, char **args, int *background) {
 }
 
 void execute_command(char **args, int background) {
-    // TODO: Implementar execução
-    // Usar fork() e execvp()
-    // Gerenciar background se necessário
+    // Realizando o fork
+    pid_t pid = fork();
+
+    /* O comando fork pode nos dar o valor 0, referente ao processo do filho gerado, 
+    e o pid do filho, refente ao pai */
+
+    // Verificando, primeiramente, se houve algum erro
+    if (pid < 0){
+        perror("Erro ao criar o processo filho");
+        exit(1);
+    }
+
+    // Caso estejamos no processo filho, executamos os script
+    if (pid == 0){
+
+        // Tentando executar o comando por meio de "execvp"
+        if (execvp(args[0], args) == -1) {
+            perror("Erro ao tentar executar o comando execvp no minishell");
+            exit(1); // Em caso de falha, encerramos o processo filho
+        }
+    }
+
+    // Se nao deu erro e nem estamos no processo filho, entao estamos no pai
+    else{
+
+        // Salvamos o valor do processo filho na variavel last_child_pid
+        last_child_pid = pid;
+
+        int status; // Status da execucao do processo
+        if (waitpid(last_child_pid, &status, 0) == -1){
+            perror("Erro ao tentar rodar o waitpid");
+
+        }
+
+    }
+
 }
 
 int is_internal_command(char **args) {
@@ -57,6 +90,20 @@ void handle_internal_command(char **args) {
     if (strcmp(args[0], "exit") == 0){
         printf("Shell encerrado!\n");
         exit(0); // Simplesmente encerramos o programa e retornamos 0
+    }
+
+    // Caso o comando recebido tenha sido "pid"
+    else if (strcmp(args[0], "pid") == 0){
+
+        // Printando o pid do shell
+        printf("valor PID da execucao do shell: %d \n", getpid());
+
+        // Verificando se ha um processo filho para ser mostrado
+        if (last_child_pid != 0){
+            // Caso haja um filho, pegamos o seu valor de processo
+            printf("O valor do último filho do processo e %d \n", last_child_pid);
+        }
+
     }
 
 }
