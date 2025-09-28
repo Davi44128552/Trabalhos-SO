@@ -11,6 +11,7 @@
 // Array para armazenar PIDs de processos em background
 pid_t bg_processes[10];
 int bg_count = 0;
+int loop = 1;
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
 void parse_command(char *input, char **args, int *background) {
@@ -19,8 +20,8 @@ void parse_command(char *input, char **args, int *background) {
 
     // Lendo o comando e seus argumentos
     while (token != NULL && argc < MAX_ARGS){
-        argc++; // Incrementando argc para a sua proxima posicao
         args[argc] = token; // Definindo este argumento pelo token lido por strtok
+        argc++; // Incrementando argc para a sua proxima posicao
         token = strtok(NULL, " \t"); // Pegando o proximo argumento 
     }
 
@@ -35,13 +36,29 @@ void execute_command(char **args, int background) {
 }
 
 int is_internal_command(char **args) {
-    // TODO: Verificar se é comando interno
-    // exit, pid, jobs, wait
+    // Verificando as strings para ver se alguma é um comando interno
+
+    // Caso o comando tenha sido "exit"
+    if (strcmp(args[0], "exit") == 0){
+        return 1;
+    }
+
+    // Caso o comando tenha sido "pid"
+    if (strcmp(args[0], "pid") == 0){
+        return 1;
+    }
+
+    // Caso não tenha sido nenhum comando interno
     return 0;
 }
 
 void handle_internal_command(char **args) {
-    // TODO: Executar comandos internos
+    
+    // Caso o comando recebido tenha sido "exit"
+    if (strcmp(args[0], "exit") == 0){
+        loop = 0;
+    }
+
 }
 
 int main() {
@@ -52,7 +69,7 @@ int main() {
     printf("Mini-Shell iniciado (PID: %d)\n", getpid());
     printf("Digite 'exit' para sair\n\n");
 
-    while (1) {
+    while (loop == 1) {
         printf("minishell> ");
         fflush(stdout);
 
