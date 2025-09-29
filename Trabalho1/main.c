@@ -16,12 +16,22 @@ pid_t last_child_pid = 0; // Armazena PID do último processo filho
 void parse_command(char *input, char **args, int *background) {
     int argc = 0; // Posicao dos argumentos
     char *token = strtok(input, " \t");
+    *background = 0;
 
     // Lendo o comando e seus argumentos
     while (token != NULL && argc < MAX_ARGS){
         args[argc] = token; // Definindo este argumento pelo token lido por strtok
         argc++; // Incrementando argc para a sua proxima posicao
         token = strtok(NULL, " \t"); // Pegando o proximo argumento 
+    }
+
+    // Verificando a presenca de "&" para o background
+    if (strcmp(args[argc - 1], "&") == 0){
+        
+        *background = 1;
+        args[argc - 1] = NULL;
+        argc--;
+
     }
 
     // Definindo o último argumento como Null para o exec
@@ -80,6 +90,16 @@ int is_internal_command(char **args) {
         return 1;
     }
 
+    // Caso o comando tenha sido "wait"
+    if (strcmp(args[0], "wait") == 0){
+        return 1;
+    }
+
+    // Caso o comando tenha sido "jobs"
+    if (strcmp(args[0], "jobs") == 0){
+        return 1;
+    }
+
     // Caso não tenha sido nenhum comando interno
     return 0;
 }
@@ -104,6 +124,11 @@ void handle_internal_command(char **args) {
             printf("O valor do último filho do processo e %d \n", last_child_pid);
         }
 
+    }
+
+    // Caso o comando recebido tenha sido "wait"
+    else if (strcmp(args[0], "wait") == 0){
+        
     }
 
 }
