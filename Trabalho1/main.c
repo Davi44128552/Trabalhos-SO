@@ -25,7 +25,7 @@ void clean_finished_processes(void) {
                     bg_processes[j] = bg_processes[j + 1];
                 }
                 bg_count--;
-                printf("minishell>[job %d] + Done\n", i + 1);
+                printf("minishell>[job %d] (%d) + Done\n", i + 1, pid);
                 break;
             }
         }
@@ -33,57 +33,47 @@ void clean_finished_processes(void) {
 }
        
 void parse_command(char *input, char **args, int *background) {
-    int argc = 0; // Posicao dos argumentos
+    int argc = 0;
+    *background = 0;
     char *token = strtok(input, " \t");
-
-    // Lendo o comando e seus argumentos
-    while (token != NULL && argc < MAX_ARGS){
-        args[argc] = token; // Definindo este argumento pelo token lido por strtok
-        argc++; // Incrementando argc para a sua proxima posicao
-        token = strtok(NULL, " \t"); // Pegando o proximo argumento 
+    while (token != NULL && argc < MAX_ARGS) {
+        if (strcmp(token, "&") == 0) {
+            *background = 1;
+        } else {
+            args[argc++] = token;
+        }
+        token = strtok(NULL, " \t");
     }
-
-    // Definindo o último argumento como Null para o exec
     args[argc] = NULL;
 }
 
 void execute_command(char **args, int background) {
-    // Realizando o fork
     pid_t pid = fork();
-
-    /* O comando fork pode nos dar o valor 0, referente ao processo do filho gerado, 
-    e o pid do filho, refente ao pai */
-
-    // Verificando, primeiramente, se houve algum erro
-    if (pid < 0){
+    if (pid < 0) {
         perror("Erro ao criar o processo filho");
         exit(1);
     }
-
-    // Caso estejamos no processo filho, executamos os script
-    if (pid == 0){
-
-        // Tentando executar o comando por meio de "execvp"
+    if (pid == 0) {
         if (execvp(args[0], args) == -1) {
             perror("Erro ao tentar executar o comando execvp no minishell");
-            exit(1); // Em caso de falha, encerramos o processo filho
+            exit(1);
         }
-    }
-
-    // Se nao deu erro e nem estamos no processo filho, entao estamos no pai
-    else{
-
-        // Salvamos o valor do processo filho na variavel last_child_pid
+    } else {
         last_child_pid = pid;
-
-        int status; // Status da execucao do processo
-        if (waitpid(last_child_pid, &status, 0) == -1){
-            perror("Erro ao tentar rodar o waitpid");
-
+        if (background) {
+            if (bg_count < 10) {
+                bg_processes[bg_count++] = pid;
+                printf("[minishell] Processo %d rodando em background\n", pid);
+            } else {
+                printf("Limite de processos em background atingido!\n");
+            }
+        } else {
+            int status;
+            if (waitpid(last_child_pid, &status, 0) == -1) {
+                perror("Erro ao tentar rodar o waitpid");
+            }
         }
-
     }
-
 }
 
 int is_internal_command(char **args) {
@@ -127,13 +117,12 @@ void handle_internal_command(char **args) {
     else if(strcmp(args[0], "wait") == 0){
         if (bg_count == 0) {
             printf("Nenhum processo em background\n");
-        } else if (bg_count < 10) {
+        } else {
             while (bg_count > 0) {
-                int status;
-                pid_t pid = wait(&status); // Bloqueia até um processo terminar
-                // Remove da lista (código similar ao clean_finished_processes)
-        }
-        printf("Todos os processos terminaram\n");
+                clean_finished_processes();
+                sleep(1); // Espera um pouco antes de checar de novo
+            }
+            printf("Todos os processos terminaram\n");
         }
     }
 
@@ -148,31 +137,21 @@ int main() {
     printf("Digite 'exit' para sair\n\n");
 
     while (1) {
+        clean_finished_processes();
         printf("minishell> ");
         fflush(stdout);
 
-        // Ler entrada do usuário
         if (!fgets(input, sizeof(input), stdin)) {
             break;
         }
-
-        // Remover quebra de linha
         input[strcspn(input, "\n")] = 0;
-
-        // Ignorar linhas vazias
         if (strlen(input) == 0) {
             continue;
         }
-
-        // Fazer parsing do comando
         parse_command(input, args, &background);
-
-        // Executar comando
         if (is_internal_command(args)) {
             handle_internal_command(args);
-        } 
-
-        else {
+        } else {
             execute_command(args, background);
         }
     }
