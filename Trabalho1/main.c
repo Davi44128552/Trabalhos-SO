@@ -14,6 +14,27 @@ int bg_count = 0;
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
 // Funcoes auxiliares para as funcionalidades opcionais
+
+// Funcao para limpar os processos
+void clean_finished_processes(void) {
+    while (bg_count > 0) {
+        pid_t pid = waitpid(-1, NULL, WNOHANG);
+        if (pid <= 0) break; // Nenhum processo terminou
+        // Remover PID da lista de bg_processes
+        for (int i = 0; i < bg_count; i++) {
+            if (bg_processes[i] == pid) {
+                // Deslocar elementos para preencher a lacuna
+                for (int j = i; j < bg_count - 1; j++) {
+                    bg_processes[j] = bg_processes[j + 1];
+                }
+                bg_count--;
+                printf("minishell>[job %d] (%d) + Done\n", i + 1, pid);
+                break;
+            }
+        }
+    }
+}
+       
 // Funcao para adicionar processo background no vetor
 void add_bg_process(pid_t pid) {
     if (bg_count < 10) {
@@ -26,7 +47,8 @@ void add_bg_process(pid_t pid) {
 }
 
 void parse_command(char *input, char **args, int *background) {
-    int argc = 0; // Posicao dos argumentos
+    int argc = 0;
+    *background = 0;
     char *token = strtok(input, " \t");
     *background = 0;
 
@@ -51,25 +73,15 @@ void parse_command(char *input, char **args, int *background) {
 }
 
 void execute_command(char **args, int background) {
-    // Realizando o fork
     pid_t pid = fork();
-
-    /* O comando fork pode nos dar o valor 0, referente ao processo do filho gerado, 
-    e o pid do filho, refente ao pai */
-
-    // Verificando, primeiramente, se houve algum erro
-    if (pid < 0){
+    if (pid < 0) {
         perror("Erro ao criar o processo filho");
         exit(1);
     }
-
-    // Caso estejamos no processo filho, executamos os script
-    if (pid == 0){
-
-        // Tentando executar o comando por meio de "execvp"
+    if (pid == 0) {
         if (execvp(args[0], args) == -1) {
             perror("Erro ao tentar executar o comando execvp no minishell");
-            exit(1); // Em caso de falha, encerramos o processo filho
+            exit(1);
         }
     }
 
@@ -99,7 +111,6 @@ void execute_command(char **args, int background) {
     }
 
     }
-
 }
 
 int is_internal_command(char **args) {
@@ -150,6 +161,17 @@ void handle_internal_command(char **args) {
         }
 
     }
+    else if(strcmp(args[0], "wait") == 0){
+        if (bg_count == 0) {
+            printf("Nenhum processo em background\n");
+        } else {
+            while (bg_count > 0) {
+                clean_finished_processes();
+                sleep(1); // Espera um pouco antes de checar de novo
+            }
+            printf("Todos os processos terminaram\n");
+        }
+    }
 
     // Caso o comando recebido tenha sido "jobs"
     else if (strcmp(args[0], "jobs") == 0){
@@ -183,34 +205,24 @@ int main() {
     printf("Digite 'exit' para sair\n\n");
 
     while (1) {
+        clean_finished_processes();
         
         // Chamando a funcao para limpar processos terminados
 
         printf("minishell> ");
         fflush(stdout);
 
-        // Ler entrada do usuário
         if (!fgets(input, sizeof(input), stdin)) {
             break;
         }
-
-        // Remover quebra de linha
         input[strcspn(input, "\n")] = 0;
-
-        // Ignorar linhas vazias
         if (strlen(input) == 0) {
             continue;
         }
-
-        // Fazer parsing do comando
         parse_command(input, args, &background);
-
-        // Executar comando
         if (is_internal_command(args)) {
             handle_internal_command(args);
-        } 
-
-        else {
+        } else {
             execute_command(args, background);
         }
     }
