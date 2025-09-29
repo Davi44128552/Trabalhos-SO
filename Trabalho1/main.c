@@ -13,15 +13,37 @@ pid_t bg_processes[10];
 int bg_count = 0;
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
+// Funcoes auxiliares para as funcionalidades opcionais
+// Funcao para adicionar processo background no vetor
+void add_bg_process(pid_t pid) {
+    if (bg_count < 10) {
+        bg_processes[bg_count++] = pid;
+    }
+
+    else{
+        printf("O vetor de processos background esta cheio!\n");
+    }
+}
+
 void parse_command(char *input, char **args, int *background) {
     int argc = 0; // Posicao dos argumentos
     char *token = strtok(input, " \t");
+    *background = 0;
 
     // Lendo o comando e seus argumentos
     while (token != NULL && argc < MAX_ARGS){
         args[argc] = token; // Definindo este argumento pelo token lido por strtok
         argc++; // Incrementando argc para a sua proxima posicao
         token = strtok(NULL, " \t"); // Pegando o proximo argumento 
+    }
+
+    // Verificando a presenca de "&" para o background
+    if (strcmp(args[argc - 1], "&") == 0){
+        
+        *background = 1;
+        args[argc - 1] = NULL;
+        argc--;
+
     }
 
     // Definindo o último argumento como Null para o exec
@@ -54,14 +76,27 @@ void execute_command(char **args, int background) {
     // Se nao deu erro e nem estamos no processo filho, entao estamos no pai
     else{
 
-        // Salvamos o valor do processo filho na variavel last_child_pid
-        last_child_pid = pid;
+        // Verificando se o processo e background
+        if (background){
 
-        int status; // Status da execucao do processo
-        if (waitpid(last_child_pid, &status, 0) == -1){
-            perror("Erro ao tentar rodar o waitpid");
+            // Adiciona o processo ao vetor
+            add_bg_process(pid);
+            printf("[%d] %d\n", bg_count, pid);
 
         }
+
+        else{
+
+            // Salvamos o valor do processo filho na variavel last_child_pid
+            last_child_pid = pid;
+
+            int status; // Status da execucao do processo
+            if (waitpid(last_child_pid, &status, 0) == -1){
+                perror("Erro ao tentar rodar o waitpid");
+
+            }
+
+    }
 
     }
 
@@ -77,6 +112,16 @@ int is_internal_command(char **args) {
 
     // Caso o comando tenha sido "pid"
     if (strcmp(args[0], "pid") == 0){
+        return 1;
+    }
+
+    // Caso o comando tenha sido "wait"
+    if (strcmp(args[0], "wait") == 0){
+        return 1;
+    }
+
+    // Caso o comando tenha sido "jobs"
+    if (strcmp(args[0], "jobs") == 0){
         return 1;
     }
 
@@ -106,6 +151,27 @@ void handle_internal_command(char **args) {
 
     }
 
+    // Caso o comando recebido tenha sido "jobs"
+    else if (strcmp(args[0], "jobs") == 0){
+
+        // Caso o vetor de processos em background esteja vazio
+        if (bg_count == 0){
+            printf("Nenhum processo em background\n");
+        }
+
+        // Caso contrario
+        else{
+            printf("Processos em Background:\n");
+            for (int i = 0; i < bg_count; i++){
+                printf("[%d] %d Running\n", i + 1, bg_processes[i]);
+            }
+        }
+
+    }
+
+    // Caso o comando recebido tenha sido "wait"
+    else if (strcmp(args[0], "wait") == 0){}
+
 }
 
 int main() {
@@ -117,6 +183,9 @@ int main() {
     printf("Digite 'exit' para sair\n\n");
 
     while (1) {
+        
+        // Chamando a funcao para limpar processos terminados
+
         printf("minishell> ");
         fflush(stdout);
 
