@@ -18,7 +18,7 @@ pid_t last_child_pid = 0; // Armazena PID do último processo filho
 // Funcao para limpar os processos
 void clean_finished_processes(void) {
     while (bg_count > 0) {
-        pid_t pid = waitpid(-1, NULL, WNOHANG);
+        pid_t pid = waitpid(-1, NULL, WNOHANG);// pega pid de qualquer filho terminado
         if (pid <= 0) break; // Nenhum processo terminou
         // Remover PID da lista de bg_processes
         for (int i = 0; i < bg_count; i++) {
@@ -37,15 +37,19 @@ void clean_finished_processes(void) {
        
 // Funcao para adicionar processo background no vetor
 void add_bg_process(pid_t pid) {
+
+    // Verificando se o vetor de processos em background ainda tem espaco
     if (bg_count < 10) {
-        bg_processes[bg_count++] = pid;
+        bg_processes[bg_count++] = pid; // Adicionando o processo ao background
     }
 
+    // Caso o vetor esteja cheio
     else{
         printf("O vetor de processos background esta cheio!\n");
     }
 }
 
+// Funcao para ler a entrada do minishell para usar nas funcoes seguintes
 void parse_command(char *input, char **args, int *background) {
     int argc = 0;
     *background = 0;
@@ -72,15 +76,22 @@ void parse_command(char *input, char **args, int *background) {
     args[argc] = NULL;
 }
 
+// Funcao para executar comandos nao internos
 void execute_command(char **args, int background) {
-    pid_t pid = fork();
+    pid_t pid = fork(); // realizando um fork do processo (sendo o processo do minishell o "pai")
+
+    // Verificando se houve algum erro na criacao de um processo filho por meio de fork()
     if (pid < 0) {
         perror("Erro ao criar o processo filho");
         exit(1);
     }
+
+    // Caso o valor do pid seja igual a 0, quer dizer que estamos rodando o processo filho
     if (pid == 0) {
+
+        // Como estamos no processo filho, tentamos executar o comando passado para ele
         if (execvp(args[0], args) == -1) {
-            perror("Erro ao tentar executar o comando execvp no minishell");
+            perror("Erro ao tentar executar o comando execvp no minishell"); // Em caso de algum erro
             exit(1);
         }
     }
@@ -103,6 +114,8 @@ void execute_command(char **args, int background) {
             last_child_pid = pid;
 
             int status; // Status da execucao do processo
+
+            // Caso nao estejamos falando de um processo foreground, esperamos o filho terminar de executar
             if (waitpid(last_child_pid, &status, 0) == -1){
                 perror("Erro ao tentar rodar o waitpid");
 
@@ -113,6 +126,7 @@ void execute_command(char **args, int background) {
     }
 }
 
+// Funcao para verificar se o comando digitado pelo usuario e interno
 int is_internal_command(char **args) {
     // Verificando as strings para ver se alguma é um comando interno
 
@@ -140,6 +154,7 @@ int is_internal_command(char **args) {
     return 0;
 }
 
+// Funcao para executar os comandos internos
 void handle_internal_command(char **args) {
     
     // Caso o comando recebido tenha sido "exit"
@@ -161,15 +176,15 @@ void handle_internal_command(char **args) {
         }
 
     }
-    else if(strcmp(args[0], "wait") == 0){
-        if (bg_count == 0) {
+    else if(strcmp(args[0], "wait") == 0){ // confere se o comando é wait
+        if (bg_count == 0) {// se não houver processos em background com o wait
             printf("Nenhum processo em background\n");
         } else {
             while (bg_count > 0) {
-                clean_finished_processes();
+                clean_finished_processes();// chama clean_finished_processe, ele anuncia processos em background que terminaram, e quais terminaram
                 sleep(1); // Espera um pouco antes de checar de novo
             }
-            printf("Todos os processos terminaram\n");
+            printf("Todos os processos terminaram!\n");
         }
     }
 
@@ -196,6 +211,7 @@ void handle_internal_command(char **args) {
 
 }
 
+// Funcao main a qual vai rodar o minishell
 int main() {
     char input[MAX_CMD_LEN];
     char *args[MAX_ARGS];
