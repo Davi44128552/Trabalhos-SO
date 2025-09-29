@@ -1,0 +1,10 @@
+# Arquivos objeto
+*.o
+
+# Executáveis padrão
+a.out
+a.exe
+
+# Qualquer binário
+*.out
+*.exe
