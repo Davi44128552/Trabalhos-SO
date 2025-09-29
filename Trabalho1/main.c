@@ -13,6 +13,25 @@ pid_t bg_processes[10];
 int bg_count = 0;
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
+void clean_finished_processes(void) {
+    while (bg_count > 0) {
+        pid_t pid = waitpid(-1, NULL, WNOHANG);
+        if (pid <= 0) break; // Nenhum processo terminou
+        // Remover PID da lista de bg_processes
+        for (int i = 0; i < bg_count; i++) {
+            if (bg_processes[i] == pid) {
+                // Deslocar elementos para preencher a lacuna
+                for (int j = i; j < bg_count - 1; j++) {
+                    bg_processes[j] = bg_processes[j + 1];
+                }
+                bg_count--;
+                printf("minishell>[job %d] + Done\n", i + 1);
+                break;
+            }
+        }
+    }
+}
+       
 void parse_command(char *input, char **args, int *background) {
     int argc = 0; // Posicao dos argumentos
     char *token = strtok(input, " \t");
@@ -104,6 +123,18 @@ void handle_internal_command(char **args) {
             printf("O valor do último filho do processo e %d \n", last_child_pid);
         }
 
+    }
+    else if(strcmp(args[0], "wait") == 0){
+        if (bg_count == 0) {
+            printf("Nenhum processo em background\n");
+        } else if (bg_count < 10) {
+            while (bg_count > 0) {
+                int status;
+                pid_t pid = wait(&status); // Bloqueia até um processo terminar
+                // Remove da lista (código similar ao clean_finished_processes)
+        }
+        printf("Todos os processos terminaram\n");
+        }
     }
 
 }
