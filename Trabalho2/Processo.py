@@ -2,8 +2,8 @@
 import json
 
 # Criando as variáveis globais que serão usadas 
-quantum: int
-aging: int
+quantum: int = 0
+aging: int = 0
 
 # Criando uma classe para o processo
 class Processo:
