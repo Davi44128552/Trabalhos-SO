@@ -4,6 +4,10 @@ import json
 # Criando as variáveis globais que serão usadas 
 quantum: int = 0
 aging: int = 0
+pid_pc: int = 1
+
+# Lista para armazenar os processos
+processos = []
 
 # Criando uma classe para o processo
 class Processo:
@@ -20,7 +24,10 @@ class Processo:
 
     # Funções do processo
     # Construtor
-    def __init__(self, prioridade: int, tempoTotal: int, tInicializar: int):
+    def __init__(self, pid: int, prioridade: int, tempoTotal: int, tInicializar: int):
+
+            # Definindo o PID do processo
+            self.pid = pid 
             
             # Definindo as prioridades
             self.prioridadeEst = prioridade
@@ -34,7 +41,7 @@ class Processo:
             self.tempoInicializar = tInicializar
 
 # Criando uma função para leitura de arquivo
-def definirPropriedades(arquivo_config):
+def definirPropriedades(arquivo_config = "config.json"):
     # Chamando as variáveis globais
     global quantum
     global aging
@@ -50,6 +57,27 @@ def definirPropriedades(arquivo_config):
     except Exception as e:
          print("Erro na configuração dos arquivos!")
 
+# Função para ler os processos e armazená-los em uma lista
+def lerProcessos(arquivo: str):
+    global pid # Referenciando o pid anterior
+    global processos
 
-definirPropriedades("config.json")
-print(quantum, aging)   
+    try:
+        with open(arquivo) as procs:
+            for linha in procs:
+                # Associando os valores lido a características dos processos
+                tempInicial, tempExecucao, prioridade = map(int, linha.split())
+
+                # Criando o processo
+                processo = Processo(pid, prioridade, tempExecucao, tempInicial)
+
+                # Armazenando o processo na lista
+                processos.append(processo)
+
+                # Incrementando o pid
+                pid += 1
+
+    except Exception as e:
+         print("Erro na configuração dos arquivos!")
+
+# Funções para os algoritmos de escalonamento de tarefas
