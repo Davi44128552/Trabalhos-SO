@@ -1,4 +1,9 @@
+# Importando bibliotecas necessárias
+import json
+
 # Criando as variáveis globais que serão usadas 
+quantum: int
+aging: int
 
 # Criando uma classe para o processo
 class Processo:
@@ -27,3 +32,24 @@ class Processo:
 
             # Tempo de inicialização
             self.tempoInicializar = tInicializar
+
+# Criando uma função para leitura de arquivo
+def definirPropriedades(arquivo_config):
+    # Chamando as variáveis globais
+    global quantum
+    global aging
+
+    try:
+        with open(arquivo_config, "r") as config:
+            
+            # Lendo o arquivo json para definir as propriedades para o escalonador
+            dados = json.load(config)
+            quantum = int(dados.get("quantum", quantum))
+            aging = int(dados.get("aging", aging))
+
+    except Exception as e:
+         print("Erro na configuração dos arquivos!")
+
+
+definirPropriedades("config.json")
+print(quantum, aging)   
