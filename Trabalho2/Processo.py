@@ -5,6 +5,7 @@ import json
 quantum: int = 0
 aging: int = 0
 pid_pc: int = 1
+timer: int = 0
 
 # Lista para armazenar os processos
 processos = []
@@ -41,7 +42,7 @@ class Processo:
             self.tempoInicializar = tInicializar
 
 # Criando uma função para leitura de arquivo
-def definirPropriedades(arquivo_config = "config.json"):
+def definirPropriedades(arquivo_config: str = "config.json"):
     # Chamando as variáveis globais
     global quantum
     global aging
@@ -58,8 +59,8 @@ def definirPropriedades(arquivo_config = "config.json"):
          print("Erro na configuração dos arquivos!")
 
 # Função para ler os processos e armazená-los em uma lista
-def lerProcessos(arquivo: str):
-    global pid # Referenciando o pid anterior
+def lerProcessos(arquivo: str = "processos.txt"):
+    global pid_pc # Referenciando o pid anterior
     global processos
 
     try:
@@ -69,15 +70,54 @@ def lerProcessos(arquivo: str):
                 tempInicial, tempExecucao, prioridade = map(int, linha.split())
 
                 # Criando o processo
-                processo = Processo(pid, prioridade, tempExecucao, tempInicial)
+                processo = Processo(pid_pc, prioridade, tempExecucao, tempInicial)
 
                 # Armazenando o processo na lista
                 processos.append(processo)
 
                 # Incrementando o pid
-                pid += 1
+                pid_pc += 1
 
     except Exception as e:
          print("Erro na configuração dos arquivos!")
 
 # Funções para os algoritmos de escalonamento de tarefas
+
+# Shortest Job First
+def SJF():
+
+    ordem_execucao = []
+
+    global timer # Timer da execução
+
+    # Percorrendo a lista de processos
+    while (processos):
+
+        # Pegando os processos prontos para executar
+        prontos = []
+        for processo in processos:
+            if processo.tempoInicializar <= timer:
+                prontos.append(processo)
+        
+        # Verificando se há processos prontos
+        if (not prontos):
+            timer += 1
+            continue # Como o processo ainda não surgiu, pulamos
+
+        # Pegando o processo com menor tempo de execução
+        menor = min(prontos, key = lambda p: p.tempoTotalExec)
+
+        # Caso contrário, o executamos e removemos da lista
+        timer += menor.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
+
+        ordem_execucao.append(menor.pid)
+
+        # Removemos o processo já finalizado da lista
+        processos.remove(menor)
+
+    return ordem_execucao
+
+lerProcessos()
+
+lista = SJF()
+print(lista)
