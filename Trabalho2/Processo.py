@@ -79,25 +79,68 @@ def lerProcessos(arquivo: str = "processos.txt"):
                 pid_pc += 1
 
     except Exception as e:
-         print("Erro na configuração dos arquivos!")
+         print("Erro na configuração dos arquivos!", e)
+
+# Funções auxiliares
+# Função para verificar se o processo está pronto
+def processos_prontos(timer: int, listaProcessos: list[int]):
+
+    # Pegando os processos prontos para executar
+    prontos = []
+    for processo in listaProcessos:
+        if processo.tempoInicializar <= timer:
+            prontos.append(processo)
+
+    return prontos
+
 
 # Funções para os algoritmos de escalonamento de tarefas
+# First Come First Served
+def FCFS():
+
+    ordem_execucao = []
+    processosCopia = processos.copy()
+
+    global timer # Timer da execução
+
+    # Percorrendo a lista de processos
+    while (processosCopia):
+
+        # Pegando os processos prontos 
+        prontos = processos_prontos(timer, processosCopia)
+
+        # Verificando se há processos prontos
+        if (not prontos):
+            timer += 1
+            continue # Como o processo ainda não surgiu, pulamos
+
+        # Pegando o processo que surgiu primeiro
+        menor = min(prontos, key = lambda p: p.tempoInicializar)
+
+        # Executando e removendo o processo da lista
+        timer += menor.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
+
+        ordem_execucao.append(menor.pid)
+
+        # Removemos o processo já finalizado da lista
+        processosCopia.remove(menor)
+
+    timer = 0
+    return ordem_execucao
 
 # Shortest Job First
 def SJF():
 
     ordem_execucao = []
+    processosCopia = processos.copy()
 
     global timer # Timer da execução
 
     # Percorrendo a lista de processos
-    while (processos):
+    while (processosCopia):
 
         # Pegando os processos prontos para executar
-        prontos = []
-        for processo in processos:
-            if processo.tempoInicializar <= timer:
-                prontos.append(processo)
+        prontos = processos_prontos(timer, processosCopia)
         
         # Verificando se há processos prontos
         if (not prontos):
@@ -107,17 +150,18 @@ def SJF():
         # Pegando o processo com menor tempo de execução
         menor = min(prontos, key = lambda p: p.tempoTotalExec)
 
-        # Caso contrário, o executamos e removemos da lista
+        # Executando e removendo o processo da lista
         timer += menor.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
 
         ordem_execucao.append(menor.pid)
 
         # Removemos o processo já finalizado da lista
-        processos.remove(menor)
+        processosCopia.remove(menor)
 
+    timer = 0
     return ordem_execucao
 
 lerProcessos()
-
-lista = SJF()
-print(lista)
+lista1 = SJF()
+lista2 = FCFS()
+print(f'Lista de execução por SJF: {lista1} \nLista de execução por FCFS: {lista2}')
