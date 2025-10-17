@@ -161,7 +161,40 @@ def SJF():
     timer = 0
     return ordem_execucao
 
+# Escalonamento por prioridade sem preempção
+def PrioC():
+    ordem_execucao = []
+    processosCopia = processos.copy()
+
+    global timer # Timer da execução
+
+    # Percorrendo a lista de processos
+    while (processosCopia):
+
+        # Pegando os processos prontos para executar
+        prontos = processos_prontos(timer, processosCopia)
+        
+        # Verificando se há processos prontos
+        if (not prontos):
+            timer += 1
+            continue # Como o processo ainda não surgiu, pulamos
+
+        # Pegando o processo com maior prioridade
+        prioritario = max(prontos, key = lambda p: p.prioridadeEst)
+
+        # Executando e removendo o processo da lista
+        timer += prioritario.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
+
+        ordem_execucao.append(prioritario.pid)
+
+        # Removemos o processo já finalizado da lista
+        processosCopia.remove(prioritario)
+
+    timer = 0
+    return ordem_execucao
+
 lerProcessos()
 lista1 = SJF()
 lista2 = FCFS()
-print(f'Lista de execução por SJF: {lista1} \nLista de execução por FCFS: {lista2}')
+lista3 = PrioC()
+print(f'Lista de execução por SJF: {lista1} \nLista de execução por FCFS: {lista2} \nLista de execução por PrioC: {lista3}')
