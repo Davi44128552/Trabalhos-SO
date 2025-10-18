@@ -249,6 +249,37 @@ def RRSP() -> list[int]:
     # Retornando a lista final
     timer = 0
     return ordem_execucao
+def PrioP() -> list[int]:
+    ordem_execucao = []
+    processosCopia = copy.deepcopy(processos) # Criando uma cópia profunda para não modificar os objetos de fato
+
+    global timer # Timer da execução
+
+    while (processosCopia):
+
+        # Pegando os processos prontos para executar
+        prontos = processos_prontos(timer, processosCopia)
+        
+        # Verificando se há processos prontos
+        if (not prontos):
+            timer += 1
+            continue # Como o processo ainda não surgiu, pulamos
+
+        # Pegando o processo com maior prioridade
+        prioritario = max(prontos, key = lambda p: p.prioridadeEst)
+
+        # Executa por 1 unidade de tempo → simula a preempção
+        prioritario.tempoRestanteExec -= 1
+        ordem_execucao.append(prioritario.pid)
+        timer += 1
+
+        # Se o processo terminou, remove da lista
+        if prioritario.tempoRestanteExec == 0:
+            processosCopia.remove(prioritario)
+
+    timer = 0
+    return ordem_execucao
+
 
 definirPropriedades()
 lerProcessos()
@@ -256,9 +287,11 @@ lista1 = SJF()
 lista2 = FCFS()
 lista3 = PrioC()
 lista4 = RRSP()
+lista5 = PrioP()
 print(f'''
       Lista de execução por FCFS: {lista2} \n
       Lista de execução por  SJF: {lista1} \n
       Lista de execução por PrioC: {lista3} \n
-      Lista de execução por Round-Robin: {lista4} \n'''
+      Lista de execução por Round-Robin: {lista4} \n
+      Lista de execução Por prioridade, com preempção por prioridade: {lista5} \n'''
      )
