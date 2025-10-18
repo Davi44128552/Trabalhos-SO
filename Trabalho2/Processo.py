@@ -231,7 +231,7 @@ def PrioC() -> list[int]:
     return ordem_execucao
 
 # Round-robin com quantum, sem prioridade
-def RRSP() -> list[int]:
+def RRSemPrioridade() -> list[int]:
     
     fila_prontos = [] # Pegando uma fila de prontos para não se confundir com os disponíveis
     processosAdicionados = set()
@@ -286,6 +286,8 @@ def RRSP() -> list[int]:
     # Retornando a lista final
     timer = 0
     return ordem_execucao
+
+# Prioridade preemptivo
 def PrioP() -> list[int]:
     ordem_execucao = []
     processosCopia = copy.deepcopy(processos) # Criando uma cópia profunda para não modificar os objetos de fato
@@ -317,20 +319,90 @@ def PrioP() -> list[int]:
     timer = 0
     return ordem_execucao
 
+# Round-robin com prioridade e envelhecimento
+def RRPrioEvelhecimento() -> list[int]:
+    fila_prontos = [] # Pegando uma fila de prontos para não se confundir com os disponíveis
+    processosAdicionados = set()
+    ordem_execucao = []
+    processosCopia = copy.deepcopy(processos) # Criando uma cópia profunda para não modificar os objetos de fato
+
+    global timer # Timer da execução
+
+    # Percorrendo a lista de processos
+    while (processosCopia):
+
+        # Pegando os processos prontos para executar
+        prontos = processos_prontos(timer, processosCopia)
+
+        # Filtrando as tarefas
+        for p in prontos:
+            if (p.tempoRestanteExec > 0 and p.pid not in processosAdicionados):
+                fila_prontos.append(p)
+                processosAdicionados.add(p.pid)
+
+        # Verificando se não há nenhum processo pronto
+        if (not fila_prontos):
+            timer += 1
+            continue
+
+        # Pegando o processo com maior prioridade dinâmica
+        prioritario = max(fila_prontos, key=lambda p: p.prioridadeDin)
+
+        # Executando a tarefa
+        tempoExecucao = min(quantum, prioritario.tempoRestanteExec)
+        timer += tempoExecucao
+        prioritario.tempoRestanteExec -= tempoExecucao
+        ordem_execucao.extend([prioritario.pid] * tempoExecucao) # Adicionando a execução à lista
+
+        # Restartando a prioridade da tarefa executada
+        prioritario.prioridadeDin = prioritario.prioridadeEst
+
+        # Verificando se surgiu alguma tarefa durante a execução da tarefa
+        prontos = processos_prontos(timer, processosCopia)
+        for p in prontos:
+            if (p.tempoRestanteExec > 0 and p.pid not in processosAdicionados):
+                fila_prontos.append(p)
+                processosAdicionados.add(p.pid)
+
+        # aumenta a prioridade dinâmica dos processos que estão esperando
+        for p in fila_prontos:
+            if p != prioritario and p.tempoRestanteExec > 0:
+                p.prioridadeDin += aging
+
+
+        # Verificando se a tarefa ainda não terminou
+        if (prioritario.tempoRestanteExec > 0):
+            fila_prontos.append(prioritario) # Caso não tenha terminado, vai pro final da fila
+
+        else:
+            # Caso tenha terminado, o removemos da lista de tarefas pendentes
+            for p in processosCopia:
+                if p.pid == prioritario.pid:
+                    processosCopia.remove(p)
+                    break
+            #processosCopia.remove(prioritario) 
+            processosAdicionados.discard(prioritario.pid)
+
+
+    # Retornando a lista final
+    timer = 0
+    return ordem_execucao
 
 definirPropriedades()
 lerProcessos()
 lista1 = SJF()
 lista2 = FCFS()
 lista3 = PrioC()
-lista4 = RRSP()
-lista5 = PrioP()
-lista6 = SRTF()
+lista4 = RRSemPrioridade()
+lista5 = SRTF()
+lista6 = PrioP()
+lista7 = RRPrioEvelhecimento()
 print(f'''
       Lista de execução por FCFS: {lista2} \n
       Lista de execução por  SJF: {lista1} \n
       Lista de execução por PrioC: {lista3} \n
       Lista de execução por Round-Robin: {lista4} \n
-      Lista de execução Por PrioP: {lista5} \n
-      Lista de execução por SRTF: {lista6} \n'''
+      Lista de execução por SRTF: {lista5} \n
+      Lista de execução Por prioridade, com preempção por prioridade: {lista6} \n
+      Lista de execução Por Round-Robin, com prioridade e envelhecimento: {lista7} \n'''
      )
