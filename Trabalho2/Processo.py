@@ -162,6 +162,39 @@ def SJF() -> list[int]:
     timer = 0
     return ordem_execucao
 
+# Shortest Remaining Time First
+def SRTF() -> list[int]:
+    ordem_execucao = []
+    processosCopia = copy.deepcopy(processos)
+
+    global timer
+
+    # Percorrendo a lista de processos
+    while (processosCopia):
+
+        # Pegando os processos prontos para executar
+        prontos = processos_prontos(timer, processosCopia)
+
+        # Verificando se não há nenhuma tarefa disponível ainda
+        if (not prontos):
+            timer += 1
+            continue
+
+        # Pegando o processo com menor tempo de execucao pendente
+        prox = min(prontos, key = lambda p: p.tempoRestanteExec)
+
+        # Executando a tarefa em tempo += 1
+        prox.tempoRestanteExec -= 1
+        timer += 1
+        ordem_execucao.append(prox.pid)
+
+        # Verificando se essa tarefa já pode ser removida
+        if (prox.tempoRestanteExec == 0):
+            processosCopia.remove(prox)
+
+    return ordem_execucao
+
+
 # Escalonamento por prioridade sem preempção
 def PrioC() -> list[int]:
     ordem_execucao = []
@@ -256,9 +289,11 @@ lista1 = SJF()
 lista2 = FCFS()
 lista3 = PrioC()
 lista4 = RRSP()
+lista5 = SRTF()
 print(f'''
       Lista de execução por FCFS: {lista2} \n
       Lista de execução por  SJF: {lista1} \n
       Lista de execução por PrioC: {lista3} \n
-      Lista de execução por Round-Robin: {lista4} \n'''
+      Lista de execução por Round-Robin: {lista4} \n
+      Lista de execução por SRTF: {lista5} \n'''
      )
