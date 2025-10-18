@@ -121,7 +121,8 @@ def FCFS() -> list[int]:
         # Executando e removendo o processo da lista
         timer += menor.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
 
-        ordem_execucao.append(menor.pid)
+        # Adicionando a execução do processo na lista de execuções
+        ordem_execucao.extend([menor.pid] * menor.tempoTotalExec)
 
         # Removemos o processo já finalizado da lista
         processosCopia.remove(menor)
@@ -154,13 +155,47 @@ def SJF() -> list[int]:
         # Executando e removendo o processo da lista
         timer += menor.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
 
-        ordem_execucao.append(menor.pid)
+        # Adicionando a execução da tarefa à lista de execução
+        ordem_execucao.extend([menor.pid] * menor.tempoTotalExec)
 
         # Removemos o processo já finalizado da lista
         processosCopia.remove(menor)
 
     timer = 0
     return ordem_execucao
+
+# Shortest Remaining Time First
+def SRTF() -> list[int]:
+    ordem_execucao = []
+    processosCopia = copy.deepcopy(processos)
+
+    global timer
+
+    # Percorrendo a lista de processos
+    while (processosCopia):
+
+        # Pegando os processos prontos para executar
+        prontos = processos_prontos(timer, processosCopia)
+
+        # Verificando se não há nenhuma tarefa disponível ainda
+        if (not prontos):
+            timer += 1
+            continue
+
+        # Pegando o processo com menor tempo de execucao pendente
+        prox = min(prontos, key = lambda p: p.tempoRestanteExec)
+
+        # Executando a tarefa em tempo += 1
+        prox.tempoRestanteExec -= 1
+        timer += 1
+        ordem_execucao.append(prox.pid)
+
+        # Verificando se essa tarefa já pode ser removida
+        if (prox.tempoRestanteExec == 0):
+            processosCopia.remove(prox)
+
+    return ordem_execucao
+
 
 # Escalonamento por prioridade sem preempção
 def PrioC() -> list[int]:
@@ -186,7 +221,8 @@ def PrioC() -> list[int]:
         # Executando e removendo o processo da lista
         timer += prioritario.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
 
-        ordem_execucao.append(prioritario.pid)
+        # Adicionando a tarefa prioritária à lista de execução
+        ordem_execucao.extend([prioritario.pid] * prioritario.tempoTotalExec)
 
         # Removemos o processo já finalizado da lista
         processosCopia.remove(prioritario)
@@ -228,7 +264,8 @@ def RRSP() -> list[int]:
         tempoExecucao = min(quantum, prox.tempoRestanteExec)
         timer += tempoExecucao
         prox.tempoRestanteExec -= tempoExecucao
-        ordem_execucao.append(prox.pid)
+        ordem_execucao.extend([prox.pid] * tempoExecucao) # Adicionando a execução à lista
+
 
         # Verificando se surgiu alguma tarefa durante a execução da tarefa
         prontos = processos_prontos(timer, processosCopia)
@@ -256,9 +293,11 @@ lista1 = SJF()
 lista2 = FCFS()
 lista3 = PrioC()
 lista4 = RRSP()
+lista5 = SRTF()
 print(f'''
       Lista de execução por FCFS: {lista2} \n
       Lista de execução por  SJF: {lista1} \n
       Lista de execução por PrioC: {lista3} \n
-      Lista de execução por Round-Robin: {lista4} \n'''
+      Lista de execução por Round-Robin: {lista4} \n
+      Lista de execução por SRTF: {lista5} \n'''
      )
