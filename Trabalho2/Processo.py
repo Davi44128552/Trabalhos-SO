@@ -121,7 +121,8 @@ def FCFS() -> list[int]:
         # Executando e removendo o processo da lista
         timer += menor.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
 
-        ordem_execucao.append(menor.pid)
+        # Adicionando a execução do processo na lista de execuções
+        ordem_execucao.extend([menor.pid] * menor.tempoTotalExec)
 
         # Removemos o processo já finalizado da lista
         processosCopia.remove(menor)
@@ -154,7 +155,8 @@ def SJF() -> list[int]:
         # Executando e removendo o processo da lista
         timer += menor.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
 
-        ordem_execucao.append(menor.pid)
+        # Adicionando a execução da tarefa à lista de execução
+        ordem_execucao.extend([menor.pid] * menor.tempoTotalExec)
 
         # Removemos o processo já finalizado da lista
         processosCopia.remove(menor)
@@ -219,7 +221,8 @@ def PrioC() -> list[int]:
         # Executando e removendo o processo da lista
         timer += prioritario.tempoTotalExec # Acrescentamos ao timer o tempo de execucao do processo
 
-        ordem_execucao.append(prioritario.pid)
+        # Adicionando a tarefa prioritária à lista de execução
+        ordem_execucao.extend([prioritario.pid] * prioritario.tempoTotalExec)
 
         # Removemos o processo já finalizado da lista
         processosCopia.remove(prioritario)
@@ -261,7 +264,8 @@ def RRSP() -> list[int]:
         tempoExecucao = min(quantum, prox.tempoRestanteExec)
         timer += tempoExecucao
         prox.tempoRestanteExec -= tempoExecucao
-        ordem_execucao.append(prox.pid)
+        ordem_execucao.extend([prox.pid] * tempoExecucao) # Adicionando a execução à lista
+
 
         # Verificando se surgiu alguma tarefa durante a execução da tarefa
         prontos = processos_prontos(timer, processosCopia)
