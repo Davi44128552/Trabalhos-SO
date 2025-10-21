@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 import matplotlib.pyplot as plt
@@ -6,6 +5,40 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from scheduling_algorithms import Processo, FCFS, SJF, SRTF, PrioC, RRSemPrioridade, PrioP, RRPrioEvelhecimento, calcular_metricas
 import copy
+import json
+import os
+
+class CollapsibleFrame(ttk.Frame):
+    def __init__(self, parent, text="", *args, **kwargs):
+        ttk.Frame.__init__(self, parent, *args, **kwargs)
+        
+        self.show = tk.BooleanVar()
+        self.show.set(True)
+        
+        self.title_frame = ttk.Frame(self)
+        self.title_frame.pack(fill="x", expand=1)
+        
+        ttk.Label(self.title_frame, text=text, font=('TkDefaultFont', 10, 'bold')).pack(side="left", fill="x", expand=1, padx=5)
+        
+        self.toggle_button = ttk.Button(
+            self.title_frame,
+            text="▼",
+            width=3,
+            command=self.toggle
+        )
+        self.toggle_button.pack(side="right")
+        
+        self.content_frame = ttk.Frame(self)
+        
+    def toggle(self):
+        if self.show.get():
+            self.content_frame.pack_forget()
+            self.toggle_button.configure(text="►")
+            self.show.set(False)
+        else:
+            self.content_frame.pack(fill="both", expand=1)
+            self.toggle_button.configure(text="▼")
+            self.show.set(True)
 
 class ProcessSchedulingSimulatorGUI:
     def __init__(self, master):
@@ -16,12 +49,30 @@ class ProcessSchedulingSimulatorGUI:
         self.original_processes_for_simulation = [] # Lista de objetos Processo para simulação
 
         # Configurações de quantum e aging
-        self.quantum = tk.IntVar(value=2) # Valor padrão
-        self.aging = tk.IntVar(value=1) # Valor padrão
+        # Carregar configurações do config.json
+        config_path = "config.json"
 
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    config = json.load(f)
+                    default_quantum = config.get('quantum', 2)
+                    default_aging = config.get('aging', 1)
+            except:
+                pass
+
+        self.quantum = tk.IntVar(value=default_quantum)
+        self.aging = tk.IntVar(value=default_aging)
         # Frame para entrada de processos
         self.process_input_frame = ttk.LabelFrame(master, text="Adicionar Processo")
         self.process_input_frame.pack(padx=10, pady=10, fill="x")
+        
+        # Frame para remover processos
+        self.process_remove_frame = ttk.LabelFrame(master, text="Remover Processo")
+        self.process_remove_frame.pack(padx=10, pady=10, fill="x")
+
+        self.remove_process_button = ttk.Button(self.process_remove_frame, text="Remover Processo Selecionado", command=self.remove_process)
+        self.remove_process_button.pack(padx=5, pady=5)
 
         # Campos de entrada para o processo
         ttk.Label(self.process_input_frame, text="Instante de Criação:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
@@ -49,11 +100,15 @@ class ProcessSchedulingSimulatorGUI:
         ttk.Label(self.config_frame, text="Aging:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
         ttk.Entry(self.config_frame, textvariable=self.aging).grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
-        # Frame para exibir processos adicionados
-        self.process_list_frame = ttk.LabelFrame(master, text="Processos Adicionados")
-        self.process_list_frame.pack(padx=10, pady=10, fill="both", expand=True)
+        self.save_config_button = ttk.Button(self.config_frame, text="Salvar Configurações", command=self.save_config)
+        self.save_config_button.grid(row=2, column=0, columnspan=2, pady=10)
 
-        self.process_tree = ttk.Treeview(self.process_list_frame, columns=("PID", "Criação", "Duração", "Prioridade"), show="headings")
+        # Frame para exibir processos adicionados (colapsável)
+        self.process_list_frame = CollapsibleFrame(master, text="Processos Adicionados")
+        self.process_list_frame.pack(padx=10, pady=10, fill="both", expand=True)
+        self.process_list_frame.content_frame.pack(fill="both", expand=True)
+
+        self.process_tree = ttk.Treeview(self.process_list_frame.content_frame, columns=("PID", "Criação", "Duração", "Prioridade"), show="headings")
         self.process_tree.heading("PID", text="PID")
         self.process_tree.heading("Criação", text="Criação")
         self.process_tree.heading("Duração", text="Duração")
@@ -73,9 +128,10 @@ class ProcessSchedulingSimulatorGUI:
         self.run_simulation_button = ttk.Button(self.control_frame, text="Executar Simulação", command=self.run_simulation)
         self.run_simulation_button.grid(row=0, column=2, padx=5, pady=5)
 
-        # Frame para exibir métricas de desempenho
-        self.metrics_frame = ttk.LabelFrame(master, text="Métricas de Desempenho")
+        # Frame para exibir métricas de desempenho (colapsável)
+        self.metrics_frame = CollapsibleFrame(master, text="Métricas de Desempenho")
         self.metrics_frame.pack(padx=10, pady=10, fill="x")
+        self.metrics_frame.content_frame.pack(fill="x", expand=True)
 
         # Frame para o Diagrama de Gantt
         self.gantt_frame = ttk.LabelFrame(master, text="Diagrama de Gantt")
@@ -91,7 +147,7 @@ class ProcessSchedulingSimulatorGUI:
         self.ax.set_title("Diagrama de Gantt da Execução")
         self.fig.tight_layout()
 
-        self.metrics_tree = ttk.Treeview(self.metrics_frame, columns=("Métrica", "Valor"), show="headings")
+        self.metrics_tree = ttk.Treeview(self.metrics_frame.content_frame, columns=("Métrica", "Valor"), show="headings")
         self.metrics_tree.heading("Métrica", text="Métrica")
         self.metrics_tree.heading("Valor", text="Valor")
         self.metrics_tree.pack(fill="both", expand=True)
@@ -117,6 +173,61 @@ class ProcessSchedulingSimulatorGUI:
 
         except ValueError:
             messagebox.showerror("Erro de Entrada", "Por favor, insira valores inteiros válidos para todos os campos.")
+
+    def remove_process(self):
+        # Pega o item selecionado na árvore
+        selected_item = self.process_tree.selection()
+        
+        if not selected_item:
+            messagebox.showwarning("Nenhuma Seleção", "Por favor, selecione um processo para remover.")
+            return
+        
+        # Pega os valores do item selecionado
+        item_values = self.process_tree.item(selected_item[0], 'values')
+        pid_to_remove = int(item_values[0])
+        
+        # Remove da lista de processos
+        self.processes = [p for p in self.processes if p["pid"] != pid_to_remove]
+        
+        # Remove da visualização da árvore
+        self.process_tree.delete(selected_item[0])
+        
+        # Reajusta os PIDs para serem sequenciais novamente
+        for i, process in enumerate(self.processes):
+            old_pid = process["pid"]
+            new_pid = i + 1
+            process["pid"] = new_pid
+            
+            # Atualiza na árvore também
+            for item in self.process_tree.get_children():
+                values = self.process_tree.item(item, 'values')
+                if int(values[0]) == old_pid:
+                    self.process_tree.item(item, values=(new_pid, values[1], values[2], values[3]))
+                    break
+
+    def save_config(self):
+        try:
+            quantum_val = self.quantum.get()
+            aging_val = self.aging.get()
+
+            if quantum_val <= 0 or aging_val <= 0:
+                messagebox.showerror("Erro de Configuração", "Quantum e Aging devem ser valores positivos.")
+                return
+
+            config = {
+                "quantum": quantum_val,
+                "aging": aging_val
+            }
+
+            with open("config.json", 'w') as f:
+                json.dump(config, f, indent=4)
+
+            messagebox.showinfo("Sucesso", "Configurações salvas com sucesso!")
+
+        except ValueError:
+            messagebox.showerror("Erro de Entrada", "Por favor, insira valores inteiros válidos para Quantum e Aging.")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Não foi possível salvar as configurações: {e}")
 
     def run_simulation(self):
         if not self.processes:
@@ -222,7 +333,7 @@ class ProcessSchedulingSimulatorGUI:
         # A animação é tratada por animate_gantt_chart
         self.ax.clear()
         self.canvas.draw_idle()
-        
+
 def close_janela():
     root.destroy()
     root.quit()
