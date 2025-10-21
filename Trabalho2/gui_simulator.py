@@ -370,9 +370,22 @@ if __name__ == "__main__":
 
     # --- Permite rolar com o scroll do mouse ---
     def _on_mouse_wheel(event):
-        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        if root.tk.call('tk', 'windowingsystem') == 'win32':
+            canvas.yview_scroll(-1 * int(event.delta / 120), "units")
+        elif root.tk.call('tk', 'windowingsystem') == 'x11':
+            # Linux usa event.num (Botão 4 e 5)
+            if event.num == 4:
+                canvas.yview_scroll(-1, "units")
+            elif event.num == 5:
+                canvas.yview_scroll(1, "units")
+        elif root.tk.call('tk', 'windowingsystem') == 'aqua':
+            # macOS
+            canvas.yview_scroll(-1 * int(event.delta), "units")
 
-    canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
+    # Eventos de rolagem do mouse
+    canvas.bind_all("<MouseWheel>", _on_mouse_wheel)   # Windows e macOS
+    canvas.bind_all("<Button-4>", _on_mouse_wheel)     # Linux: scroll para cima
+    canvas.bind_all("<Button-5>", _on_mouse_wheel)     # Linux: scroll para baixo
 
     # --- Fechamento ---
     root.protocol("WM_DELETE_WINDOW", close_janela)
