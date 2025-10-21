@@ -43,9 +43,7 @@ class CollapsibleFrame(ttk.Frame):
 class ProcessSchedulingSimulatorGUI:
     def __init__(self, master):
         self.master = master
-        if isinstance(master, tk.Tk):
-            master.title("Simulador de Escalonamento de Processos")
-
+        master.title("Simulador de Escalonamento de Processos")
 
         self.processes = [] # Lista de dicionários para a GUI
         self.original_processes_for_simulation = [] # Lista de objetos Processo para simulação
@@ -65,32 +63,34 @@ class ProcessSchedulingSimulatorGUI:
 
         self.quantum = tk.IntVar(value=default_quantum)
         self.aging = tk.IntVar(value=default_aging)
-        # Frame para entrada de processos
-        self.process_input_frame = ttk.LabelFrame(master, text="Adicionar Processo")
-        self.process_input_frame.pack(padx=10, pady=10, fill="x")
         
+        # Frame para entrada de processos (colapsável)
+        self.process_input_frame = CollapsibleFrame(master, text="Adicionar Processo")
+        self.process_input_frame.pack(padx=10, pady=10, fill="x")
+        self.process_input_frame.content_frame.pack(fill="x", expand=True)
+
+        # Campos de entrada para o processo
+        ttk.Label(self.process_input_frame.content_frame, text="Instante de Criação:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.arrival_time_entry = ttk.Entry(self.process_input_frame.content_frame)
+        self.arrival_time_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+
+        ttk.Label(self.process_input_frame.content_frame, text="Duração (segundos):").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        self.duration_entry = ttk.Entry(self.process_input_frame.content_frame)
+        self.duration_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+
+        ttk.Label(self.process_input_frame.content_frame, text="Prioridade Estática:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.priority_entry = ttk.Entry(self.process_input_frame.content_frame)
+        self.priority_entry.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
+
+        self.add_process_button = ttk.Button(self.process_input_frame.content_frame, text="Adicionar Processo", command=self.add_process)
+        self.add_process_button.grid(row=3, column=0, columnspan=2, pady=10)
+
         # Frame para remover processos
         self.process_remove_frame = ttk.LabelFrame(master, text="Remover Processo")
         self.process_remove_frame.pack(padx=10, pady=10, fill="x")
 
         self.remove_process_button = ttk.Button(self.process_remove_frame, text="Remover Processo Selecionado", command=self.remove_process)
         self.remove_process_button.pack(padx=5, pady=5)
-
-        # Campos de entrada para o processo
-        ttk.Label(self.process_input_frame, text="Instante de Criação:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.arrival_time_entry = ttk.Entry(self.process_input_frame)
-        self.arrival_time_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-
-        ttk.Label(self.process_input_frame, text="Duração (segundos):").grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.duration_entry = ttk.Entry(self.process_input_frame)
-        self.duration_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-
-        ttk.Label(self.process_input_frame, text="Prioridade Estática:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        self.priority_entry = ttk.Entry(self.process_input_frame)
-        self.priority_entry.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
-
-        self.add_process_button = ttk.Button(self.process_input_frame, text="Adicionar Processo", command=self.add_process)
-        self.add_process_button.grid(row=3, column=0, columnspan=2, pady=10)
 
         # Frame para configurações de quantum e aging
         self.config_frame = ttk.LabelFrame(master, text="Configurações")
@@ -342,38 +342,9 @@ def close_janela():
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("Simulador de Escalonamento de Processos")
-    root.geometry("1024x720")  # Define tamanho inicial mínimo da janela
-
-    # --- Frame principal com barra de rolagem ---
-    main_frame = ttk.Frame(root)
-    main_frame.pack(fill="both", expand=True)
-
-    canvas = tk.Canvas(main_frame)
-    scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-    scrollable_frame = ttk.Frame(canvas)
-
-    # Atualiza área de scroll conforme conteúdo cresce
-    scrollable_frame.bind(
-        "<Configure>",
-        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-    )
-
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-    canvas.configure(yscrollcommand=scrollbar.set)
-
-    canvas.pack(side="left", fill="both", expand=True)
-    scrollbar.pack(side="right", fill="y")
-
-    # --- Instancia a GUI dentro do frame rolável ---
-    app = ProcessSchedulingSimulatorGUI(scrollable_frame)
-
-    # --- Permite rolar com o scroll do mouse ---
-    def _on_mouse_wheel(event):
-        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-    canvas.bind_all("<MouseWheel>", _on_mouse_wheel)
-
-    # --- Fechamento ---
+    app = ProcessSchedulingSimulatorGUI(root)
     root.protocol("WM_DELETE_WINDOW", close_janela)
     root.mainloop()
+
+
+
