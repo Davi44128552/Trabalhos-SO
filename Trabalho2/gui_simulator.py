@@ -222,9 +222,16 @@ class ProcessSchedulingSimulatorGUI:
         # A animação é tratada por animate_gantt_chart
         self.ax.clear()
         self.canvas.draw_idle()
+        
+def close_janela():
+    root.destroy()
+    root.quit()
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = ProcessSchedulingSimulatorGUI(root)
+    root.protocol("WM_DELETE_WINDOW", close_janela)
     root.mainloop()
+
+
 
