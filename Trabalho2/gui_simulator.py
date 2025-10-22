@@ -53,7 +53,7 @@ class ProcessSchedulingSimulatorGUI:
         # Configurações de quantum e aging
         # Carregar configurações do config.json
         config_path = "config.json"
-
+        processo_path = 'processos.txt'
         if os.path.exists(config_path):
             try:
                 with open(config_path, 'r') as f:
@@ -62,6 +62,9 @@ class ProcessSchedulingSimulatorGUI:
                     default_aging = config.get('aging', 1)
             except:
                 pass
+        
+        # Carregar processos do processos.txt
+        self.load_processes_from_file()
 
         self.quantum = tk.IntVar(value=default_quantum)
         self.aging = tk.IntVar(value=default_aging)
@@ -91,8 +94,18 @@ class ProcessSchedulingSimulatorGUI:
         self.process_remove_frame = ttk.LabelFrame(master, text="Remover Processo")
         self.process_remove_frame.pack(padx=10, pady=10, fill="x")
 
-        self.remove_process_button = ttk.Button(self.process_remove_frame, text="Remover Processo Selecionado", command=self.remove_process)
-        self.remove_process_button.pack(padx=5, pady=5)
+        # Frame interno para organizar os botões
+        buttons_frame = ttk.Frame(self.process_manage_frame)
+        buttons_frame.pack(fill="x", padx=5, pady=5)
+
+        self.remove_process_button = ttk.Button(buttons_frame, text="Remover Selecionado", command=self.remove_process)
+        self.remove_process_button.pack(side="left", padx=(0,5))
+
+        self.reload_processes_button = ttk.Button(buttons_frame, text="Recarregar do Arquivo", command=self.reload_processes_from_file)
+        self.reload_processes_button.pack(side="left", padx=5)
+
+        self.save_processes_button = ttk.Button(buttons_frame, text="Salvar no Arquivo", command=self.save_processes_to_file)
+        self.save_processes_button.pack(side="left", padx=5)
 
         # Frame para configurações de quantum e aging
         self.config_frame = ttk.LabelFrame(master, text="Configurações")
@@ -156,6 +169,52 @@ class ProcessSchedulingSimulatorGUI:
         self.metrics_tree.heading("Valor", text="Valor")
         self.metrics_tree.pack(fill="both", expand=True)
 
+    def load_processes_from_file(self):
+        """Carrega processos do arquivo processos.txt"""
+        processo_path = 'processos.txt'
+        if os.path.exists(processo_path):
+            try:
+                with open(processo_path, 'r') as f:
+                    for line_num, line in enumerate(f, 1):
+                        line = line.strip()
+                        if line and not line.startswith('#'):  # Ignora linhas vazias e comentários
+                            parts = line.split()
+                            if len(parts) == 3:
+                                arrival, duration, priority = map(int, parts)
+                                pid = len(self.processes) + 1
+                                self.processes.append({"pid": pid, "arrival": arrival, "duration": duration, "priority": priority})
+                                self.process_tree.insert("", "end", values=(pid, arrival, duration, priority))
+                            else:
+                                print(f"Linha {line_num} ignorada - formato inválido: {line}")
+            except Exception as e:
+                print(f"Erro ao carregar processos: {e}")
+    
+    def save_processes_to_file(self):
+        """Salva processos no arquivo processos.txt"""
+        try:
+            with open('processos.txt', 'w') as f:
+                f.write("# Formato: tempo_chegada duração prioridade\n")
+                for process in self.processes:
+                    f.write(f"{process['arrival']} {process['duration']} {process['priority']}\n")
+            messagebox.showinfo("Sucesso", f"Processos salvos em processos.txt!\nTotal: {len(self.processes)} processos")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao salvar processos: {e}")
+
+    def reload_processes_from_file(self):
+        """Recarrega processos do arquivo processos.txt, substituindo os atuais"""
+        try:
+            # Limpar processos atuais
+            self.processes.clear()
+            for item in self.process_tree.get_children():
+                self.process_tree.delete(item)
+            
+            # Recarregar do arquivo
+            self.load_processes_from_file()
+            
+            messagebox.showinfo("Sucesso", f"Processos recarregados de processos.txt!\nTotal: {len(self.processes)} processos")
+        except Exception as e:
+            messagebox.showerror("Erro", f"Erro ao recarregar processos: {e}")
+
     def add_process(self):
         try:
             arrival = int(self.arrival_time_entry.get())
@@ -169,6 +228,9 @@ class ProcessSchedulingSimulatorGUI:
             pid = len(self.processes) + 1
             self.processes.append({"pid": pid, "arrival": arrival, "duration": duration, "priority": priority})
             self.process_tree.insert("", "end", values=(pid, arrival, duration, priority))
+
+            # Salvar automaticamente no arquivo processos.txt
+            self.save_processes_to_file()
 
             # Limpar campos
             self.arrival_time_entry.delete(0, tk.END)
@@ -208,6 +270,9 @@ class ProcessSchedulingSimulatorGUI:
                 if int(values[0]) == old_pid:
                     self.process_tree.item(item, values=(new_pid, values[1], values[2], values[3]))
                     break
+        
+        # Salvar automaticamente no arquivo processos.txt
+        self.save_processes_to_file()
 
     def save_config(self):
         try:
