@@ -62,9 +62,6 @@ class ProcessSchedulingSimulatorGUI:
                     default_aging = config.get('aging', 1)
             except:
                 pass
-        
-        # Carregar processos do processos.txt
-        self.load_processes_from_file()
 
         self.quantum = tk.IntVar(value=default_quantum)
         self.aging = tk.IntVar(value=default_aging)
@@ -150,6 +147,9 @@ class ProcessSchedulingSimulatorGUI:
         # Organização na tela
         self.process_tree.pack(side="left", fill="both", expand=True)
         tree_scrollbar.pack(side="right", fill="y")
+
+        # Carregar processos do processos.txt DEPOIS de criar o process_tree
+        self.load_processes_from_file()
 
         # Frame para seleção de algoritmo e execução
         self.control_frame = ttk.LabelFrame(master, text="Controles")
