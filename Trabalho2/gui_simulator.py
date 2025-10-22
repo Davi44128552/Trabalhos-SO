@@ -112,12 +112,31 @@ class ProcessSchedulingSimulatorGUI:
         self.process_list_frame.pack(padx=10, pady=10, fill="both", expand=True)
         self.process_list_frame.content_frame.pack(fill="both", expand=True)
 
-        self.process_tree = ttk.Treeview(self.process_list_frame.content_frame, columns=("PID", "Criação", "Duração", "Prioridade"), show="headings")
+        # Frame interno para conter a tabela e sua barra de rolagem
+        table_container = ttk.Frame(self.process_list_frame.content_frame)
+        table_container.pack(fill="both", expand=True)
+
+        # Criação da Treeview (tabela de processos)
+        self.process_tree = ttk.Treeview(
+            table_container,
+            columns=("PID", "Criação", "Duração", "Prioridade"),
+            show="headings",
+            height=10  # mostra 10 linhas por vez
+        )
+
+        # Cabeçalhos
         self.process_tree.heading("PID", text="PID")
         self.process_tree.heading("Criação", text="Criação")
         self.process_tree.heading("Duração", text="Duração")
         self.process_tree.heading("Prioridade", text="Prioridade")
-        self.process_tree.pack(fill="both", expand=True)
+
+        # Barra de rolagem vertical específica da tabela
+        tree_scrollbar = ttk.Scrollbar(table_container, orient="vertical", command=self.process_tree.yview)
+        self.process_tree.configure(yscrollcommand=tree_scrollbar.set)
+
+        # Organização na tela
+        self.process_tree.pack(side="left", fill="both", expand=True)
+        tree_scrollbar.pack(side="right", fill="y")
 
         # Frame para seleção de algoritmo e execução
         self.control_frame = ttk.LabelFrame(master, text="Controles")
@@ -364,8 +383,8 @@ if __name__ == "__main__":
     canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
     canvas.configure(yscrollcommand=scrollbar.set)
 
-    canvas.pack(side="left", fill="both", expand=True)
-    scrollbar.pack(side="right", fill="y")
+    canvas.pack(side="left", fill="both", expand=True, padx=(0, 2))
+    scrollbar.pack(side="right", fill="y", padx=(0, 5))
 
     # --- Instancia a GUI dentro do frame rolável ---
     app = ProcessSchedulingSimulatorGUI(scrollable_frame)
@@ -385,13 +404,57 @@ if __name__ == "__main__":
             canvas.yview_scroll(-1 * int(event.delta), "units")
 
     # Eventos de rolagem do mouse
-    canvas.bind_all("<MouseWheel>", _on_mouse_wheel)   # Windows e macOS
-    canvas.bind_all("<Button-4>", _on_mouse_wheel)     # Linux: scroll para cima
-    canvas.bind_all("<Button-5>", _on_mouse_wheel)     # Linux: scroll para baixo
+# --- Função para rolar a interface principal ---
+    def _on_mouse_wheel_global(event):
+        if root.tk.call('tk', 'windowingsystem') == 'win32':
+            canvas.yview_scroll(-1 * int(event.delta / 120), "units")
+        elif root.tk.call('tk', 'windowingsystem') == 'x11':
+            if event.num == 4:
+                canvas.yview_scroll(-1, "units")
+            elif event.num == 5:
+                canvas.yview_scroll(1, "units")
+        elif root.tk.call('tk', 'windowingsystem') == 'aqua':
+            canvas.yview_scroll(-1 * int(event.delta), "units")
+
+    # --- Função para rolar apenas a tabela ---
+    def _on_table_mouse_wheel(event):
+        widget = event.widget
+        if isinstance(widget, ttk.Treeview):
+            # Verifica se a tabela realmente precisa rolar
+            first, last = widget.yview()
+            at_top = first <= 0.0
+            at_bottom = last >= 1.0
+
+            direction = -1 if event.delta > 0 or getattr(event, 'num', None) == 4 else 1
+
+            if not (at_top and direction < 0) and not (at_bottom and direction > 0):
+                # Só rola a tabela se há mais conteúdo disponível
+                if root.tk.call('tk', 'windowingsystem') == 'win32':
+                    widget.yview_scroll(-1 * int(event.delta / 120), "units")
+                elif root.tk.call('tk', 'windowingsystem') == 'x11':
+                    if event.num == 4:
+                        widget.yview_scroll(-1, "units")
+                    elif event.num == 5:
+                        widget.yview_scroll(1, "units")
+                elif root.tk.call('tk', 'windowingsystem') == 'aqua':
+                    widget.yview_scroll(-1 * int(event.delta), "units")
+                return "break"  # só bloqueia se a tabela realmente rolou
+
+    # --- Ligações globais ---
+    canvas.bind_all("<MouseWheel>", _on_mouse_wheel_global)
+    canvas.bind_all("<Button-4>", _on_mouse_wheel_global)
+    canvas.bind_all("<Button-5>", _on_mouse_wheel_global)
+
+    # --- Ligações locais apenas nas tabelas ---
+    app.process_tree.bind("<MouseWheel>", _on_table_mouse_wheel)
+    app.process_tree.bind("<Button-4>", _on_table_mouse_wheel)
+    app.process_tree.bind("<Button-5>", _on_table_mouse_wheel)
+
+    # (Opcional) também para a tabela de métricas, se quiser:
+    app.metrics_tree.bind("<MouseWheel>", _on_table_mouse_wheel)
+    app.metrics_tree.bind("<Button-4>", _on_table_mouse_wheel)
+    app.metrics_tree.bind("<Button-5>", _on_table_mouse_wheel)
 
     # --- Fechamento ---
     root.protocol("WM_DELETE_WINDOW", close_janela)
     root.mainloop()
-
-
-
