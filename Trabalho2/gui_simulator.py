@@ -90,9 +90,9 @@ class ProcessSchedulingSimulatorGUI:
         self.add_process_button = ttk.Button(self.process_input_frame.content_frame, text="Adicionar Processo", command=self.add_process)
         self.add_process_button.grid(row=3, column=0, columnspan=2, pady=10)
 
-        # Frame para remover processos
-        self.process_remove_frame = ttk.LabelFrame(master, text="Remover Processo")
-        self.process_remove_frame.pack(padx=10, pady=10, fill="x")
+        # Frame para gerenciar processos (remover, salvar, recarregar)
+        self.process_manage_frame = ttk.LabelFrame(master, text="Gerenciar Processos")
+        self.process_manage_frame.pack(padx=10, pady=10, fill="x")
 
         # Frame interno para organizar os botões
         buttons_frame = ttk.Frame(self.process_manage_frame)
