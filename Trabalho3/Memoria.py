@@ -5,7 +5,6 @@ class Bloco:
     id: int
     comeco: int
     tamanho: int
-    tamanho_alocado: int
     livre: bool
 
     # Construtor do bloco
@@ -50,6 +49,44 @@ class Memoria:
         # Ordenando a lista
         self.memoria.sort(key = lambda b: b.comeco)
 
+    # Função para liberar o bloco
+    def free_id(self, id: int):
+        
+        # Pegando o bloco a ser removido e o retirando da lista
+        blocoRemovido = self.pegarBloco(id)
+        self.memoria.remove(blocoRemovido)
+
+        # Lista de blocos (para união)
+        blocosUnificados = [blocoRemovido]
+        comecoBlocoLivre = blocoRemovido.comeco # Pegando a posição inicial do bloco
+
+        # Verificando se tem algum vizinho vazio (para juntar)
+        posicaoBlocoRemovido = self.memoria.index(blocoRemovido)
+
+            # Vizinho à esquerda
+        if (posicaoBlocoRemovido != 0 and self.memoria[posicaoBlocoRemovido - 1].livre is True):
+            blocosUnificados.append(self.memoria[posicaoBlocoRemovido - 1])
+            comecoBlocoLivre = self.memoria[posicaoBlocoRemovido - 1].comeco # O novo começo vai ser o vizinho à esquerda
+            self.memoria.remove(self.memoria[posicaoBlocoRemovido - 1])
+
+            # Vizinho à direita
+        if (posicaoBlocoRemovido != len(self.memoria) - 1 and self.memoria[posicaoBlocoRemovido + 1].livre is True):
+            blocosUnificados.append(self.memoria[posicaoBlocoRemovido + 1])
+            self.memoria.remove(self.memoria[posicaoBlocoRemovido + 1])
+
+        # Construindo o bloco final
+        tamanhoBloco = 0 # Tamanho do bloco final
+
+        # Percorrendo os blocos para construir o único
+        for bloco in blocosUnificados:
+
+            # Calculando o tamanho do bloco
+            tamanhoBloco += bloco.tamanho
+
+        # Criando o bloco e adicionando à memória
+        blocoUnificado = Bloco(self.id, comecoBlocoLivre, tamanhoBloco, True)
+        self.memoria.append(blocoUnificado)
+        self.memoria.sort(key = lambda b: b.comeco)
 
     # Função para escolher o bloco de memória a ser alocado
     def chooseBlock(self, algoritmo: str) -> Bloco:
@@ -102,3 +139,15 @@ class Memoria:
 
         return blocos_disponiveis
     
+        # Pegar um bloco específico
+    def pegarBloco(self, id: int):
+
+        blocoEncontrado = None
+
+        # Percorrendo os blocos procurando o desejado
+        for bloco in self.memoria:
+            if (bloco.id == id):
+                blocoEncontrado = bloco
+                break
+    
+        return blocoEncontrado

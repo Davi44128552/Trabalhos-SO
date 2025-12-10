@@ -8,3 +8,6 @@ a.exe
 # Qualquer binário
 *.out
 *.exe
+
+# Cache do python
+__pycache__/
