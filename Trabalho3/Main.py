@@ -14,6 +14,10 @@ while (True):
         print("\nPrograma encerrado!")
         break
 
+    # Se o usuário não digitou nada, voltar para o início do loop
+    if not comando:
+        continue
+
     # Leitura de um exit
     if (comando[0] == 'exit'):
         break
