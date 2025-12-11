@@ -14,6 +14,10 @@ class Bloco:
         self.tamanho = tamanho
         self.livre = livre
 
+    # Informações do bloco
+    def __repr__(self):
+        return f'Bloco(id = {self.id}, comeco = {self.comeco}, tamanho = {self.tamanho})'
+
 # Classe da memória que realizará as operações
 class Memoria:
     
@@ -40,6 +44,8 @@ class Memoria:
 
         # Criando o bloco ocupado
         blocoOcupado = Bloco(self.id, blocoAlocar.comeco, tamanho, False)
+        print("Bloco Alocado!")
+        print(blocoOcupado)
         self.memoria.append(blocoOcupado)
         self.id += 1
         
