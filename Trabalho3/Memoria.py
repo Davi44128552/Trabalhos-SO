@@ -159,3 +159,25 @@ class Memoria:
                 break
     
         return blocoEncontrado
+    
+
+    def stats(self):
+
+        total = self.tamanho
+        memoria_ocupada = sum(bloco.tamanho for bloco in self.memoria if not bloco.livre)
+        memoria_livre = total - memoria_ocupada
+
+        # Fragmentação externa: quantidade de blocos livres separados
+        buracos = 0
+        for bloco in self.memoria:
+            if bloco.livre:
+                buracos += 1
+
+        uso_efetivo = (memoria_ocupada / total) * 100 if total > 0 else 0
+
+        print("==== Stats =====")
+        print(f"Tamanho total: {total} bytes")
+        print(f"Memoria Ocupada: {memoria_ocupada} bytes")
+        print(f"Memoria Livre: {memoria_livre} bytes")
+        print(f"Quantidade de Buracos (fragmentação externa): {buracos}")
+        print(f"Uso efetivo: {uso_efetivo:.2f}%")
