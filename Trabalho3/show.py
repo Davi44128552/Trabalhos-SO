@@ -7,11 +7,11 @@ def memoria_e_bloco_unico(memoria):
 
 def show(memoria: Memoria):
     print(f"Mapa de Memória (tamanho={memoria.tamanho})")
-    print("-" * (memoria.tamanho + 2))
+    print("--" * (memoria.tamanho))
     if memoria_e_bloco_unico(memoria):# Verifica se há apenas um bloco livre que ocupa toda a memória
         print("[" + " . " * memoria.tamanho + "]")
         print("[" + " . " * memoria.tamanho + "]")
-        print("-" * (memoria.tamanho + 2))
+        print("--" * (memoria.tamanho))
     else:
         # Inicializar listas com '.' para cada byte da memória
         lista1 = ['.'] * memoria.tamanho
@@ -29,7 +29,7 @@ def show(memoria: Memoria):
         linha2 = "[" + " ".join(lista2) + "]"
         print(linha1)
         print(linha2)
-        print("-" * (memoria.tamanho + 2))
+        print("--" * (memoria.tamanho))
     def print_block(block: Bloco):
         status = "Livre" if block.livre else "Ocupado"
         print(f"Bloco ID: {block.id}, Início: {block.comeco}, Tamanho: {block.tamanho}, Status: {status}")
