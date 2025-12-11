@@ -17,34 +17,36 @@ class Bloco:
 # Classe da memória que realizará as operações
 class Memoria:
     
-    id: int = 1
+    id: int
     memoria: list
     tamanho: int
 
     # Inicializador da memória
     def __init__(self, tamanho: int):
+        self.id = 1
         self.tamanho = tamanho
 
         # Iniciando a memória como um único bloco gigante
-        self.memoria = [Bloco(None, 0, self.tamanho, True)]
+        self.memoria = [Bloco(0, 0, self.tamanho, True)]
 
     # Função para alocar o bloco
     def alloc(self, tamanho: int, algoritmo: str):
 
         # Pegando o bloco que vai ser alocado
-        blocoAlocar = self.chooseBlock(algoritmo)
+        blocoAlocar = self.chooseBlock(tamanho, algoritmo)
 
         # Removendo este bloco da memória
         self.memoria.remove(blocoAlocar)
 
-        # Criando os dois blocos a partir do alocado
+        # Criando o bloco ocupado
         blocoOcupado = Bloco(self.id, blocoAlocar.comeco, tamanho, False)
         self.memoria.append(blocoOcupado)
         self.id += 1
         
-        blocoDisponivel = Bloco(self.id, (blocoAlocar.comeco + tamanho), (blocoAlocar.tamanho - tamanho), True)
-        self.memoria.append(blocoDisponivel)
-        self.id += 1
+        # Criando um bloco vazio caso ainda sobre espaço
+        if (blocoAlocar.tamanho - tamanho > 0):
+            blocoDisponivel = Bloco(0, (blocoAlocar.comeco + tamanho), (blocoAlocar.tamanho - tamanho), True)
+            self.memoria.append(blocoDisponivel)
 
         # Ordenando a lista
         self.memoria.sort(key = lambda b: b.comeco)
@@ -54,25 +56,21 @@ class Memoria:
         
         # Pegando o bloco a ser removido e o retirando da lista
         blocoRemovido = self.pegarBloco(id)
-        self.memoria.remove(blocoRemovido)
+        posicaoBlocoRemovido = self.memoria.index(blocoRemovido)
 
         # Lista de blocos (para união)
         blocosUnificados = [blocoRemovido]
         comecoBlocoLivre = blocoRemovido.comeco # Pegando a posição inicial do bloco
 
         # Verificando se tem algum vizinho vazio (para juntar)
-        posicaoBlocoRemovido = self.memoria.index(blocoRemovido)
-
             # Vizinho à esquerda
         if (posicaoBlocoRemovido != 0 and self.memoria[posicaoBlocoRemovido - 1].livre is True):
             blocosUnificados.append(self.memoria[posicaoBlocoRemovido - 1])
             comecoBlocoLivre = self.memoria[posicaoBlocoRemovido - 1].comeco # O novo começo vai ser o vizinho à esquerda
-            self.memoria.remove(self.memoria[posicaoBlocoRemovido - 1])
 
             # Vizinho à direita
         if (posicaoBlocoRemovido != len(self.memoria) - 1 and self.memoria[posicaoBlocoRemovido + 1].livre is True):
             blocosUnificados.append(self.memoria[posicaoBlocoRemovido + 1])
-            self.memoria.remove(self.memoria[posicaoBlocoRemovido + 1])
 
         # Construindo o bloco final
         tamanhoBloco = 0 # Tamanho do bloco final
@@ -82,17 +80,21 @@ class Memoria:
 
             # Calculando o tamanho do bloco
             tamanhoBloco += bloco.tamanho
+            
+        # Removendo os blocos
+        for bloco in blocosUnificados:
+            self.memoria.remove(bloco)
 
         # Criando o bloco e adicionando à memória
-        blocoUnificado = Bloco(self.id, comecoBlocoLivre, tamanhoBloco, True)
+        blocoUnificado = Bloco(0, comecoBlocoLivre, tamanhoBloco, True)
         self.memoria.append(blocoUnificado)
         self.memoria.sort(key = lambda b: b.comeco)
 
     # Função para escolher o bloco de memória a ser alocado
-    def chooseBlock(self, algoritmo: str) -> Bloco:
+    def chooseBlock(self, tamanho: int, algoritmo: str) -> Bloco:
 
         # Pegando os blocos disponiveis
-        blocos_disponiveis = self.buscarBlocosLivres()
+        blocos_disponiveis = self.buscarBlocosDisponiveis(tamanho)
         blocoEscolhido = None
 
         # Escolhendo o bloco de acordo com o algoritmo escolhido
@@ -128,13 +130,13 @@ class Memoria:
 
     # Funções auxiliares
         # Buscar blocos disponíveis
-    def buscarBlocosLivres(self) -> list:
+    def buscarBlocosDisponiveis(self, tamanho: int) -> list:
 
         blocos_disponiveis = []
 
         # Loop para percorrer todos os blocos da lista
         for bloco in self.memoria:
-            if (bloco.livre is True):
+            if (bloco.livre is True and bloco.tamanho >= tamanho):
                 blocos_disponiveis.append(bloco)
 
         return blocos_disponiveis
