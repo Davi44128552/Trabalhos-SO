@@ -1,6 +1,6 @@
 # Importando a memoria
 from Memoria import Memoria
-
+from show import show
 # Declarando a memória inicialmente vazia
 memoria = None
 
@@ -13,6 +13,10 @@ while (True):
         # Caso o usuário tenha teclado um atalho para encerrar
         print("\nPrograma encerrado!")
         break
+
+    # Se o usuário não digitou nada, voltar para o início do loop
+    if not comando:
+        continue
 
     # Leitura de um exit
     if (comando[0] == 'exit'):
@@ -59,3 +63,17 @@ while (True):
 
         # Realizando a liberação do bloco solicitada
         memoria.free_id(int(comando[1]))
+
+    #chamando show
+    elif (comando[0] == 'show'):
+
+        # Verificando se existe uma memória para ser alocado
+        if (memoria is None):
+            print("ERRO! Não existe memória para alocar!")
+            continue
+
+        # Importando a função show
+        from show import show
+
+        # Mostrando o estado atual da memória
+        show(memoria)
