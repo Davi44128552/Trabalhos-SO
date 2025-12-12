@@ -132,7 +132,61 @@ class Memoria:
         else:
             print("ERRO! Algoritmo não reconhecido!")
 
-        return blocoEscolhido
+        return blocoEscolhido 
+
+    # Função para mostrar os status da memória
+    def stats(self):
+
+        total = self.tamanho
+        memoria_ocupada = sum(bloco.tamanho for bloco in self.memoria if not bloco.livre)
+        memoria_livre = total - memoria_ocupada
+
+        # Fragmentação externa: quantidade de blocos livres separados
+        buracos = 0
+        for bloco in self.memoria:
+            if bloco.livre:
+                buracos += 1
+
+        uso_efetivo = (memoria_ocupada / total) * 100 if total > 0 else 0
+
+        print("==== Stats =====")
+        print(f"Tamanho total: {total} bytes")
+        print(f"Memoria Ocupada: {memoria_ocupada} bytes")
+        print(f"Memoria Livre: {memoria_livre} bytes")
+        print(f"Quantidade de Buracos (fragmentação externa): {buracos}")
+        print(f"Uso efetivo: {uso_efetivo:.2f}%")
+
+    # Função show para mostrar o bloco de memória com suas alocações
+    def show(self):
+        print(f"Mapa de Memória (tamanho={self.tamanho})")
+        print("--" * (self.tamanho))
+        if self.memoria_e_bloco_unico(): # Verifica se há apenas um bloco livre que ocupa toda a memória
+            print("[" + " . " * self.tamanho + "]")
+            print("[" + " . " * self.tamanho + "]")
+            print("--" * (self.tamanho))
+        else:
+            # Inicializar listas com '.' para cada byte da memória
+            lista1 = ['.'] * self.tamanho
+            lista2 = ['.'] * self.tamanho
+            
+            # Percorrer os blocos e marcar as posições
+            for bloco in self.memoria:
+                for i in range(bloco.comeco, bloco.comeco + bloco.tamanho):
+                    if not bloco.livre:  # Se o bloco está ocupado
+                        lista1[i] = '#'
+                        lista2[i] = str(bloco.id)
+            
+            # Montar as linhas com espaços entre os caracteres
+            linha1 = "[" + " ".join(lista1) + "]"
+            linha2 = "[" + " ".join(lista2) + "]"
+            print(linha1)
+            print(linha2)
+            print("--" * (self.tamanho))
+        def print_block(block: Bloco):
+            status = "Livre" if block.livre else "Ocupado"
+            print(f"Bloco ID: {block.id}, Início: {block.comeco}, Tamanho: {block.tamanho}, Status: {status}")
+        for bloco in self.memoria:
+            print_block(bloco)
 
     # Funções auxiliares
         # Buscar blocos disponíveis
@@ -160,24 +214,9 @@ class Memoria:
     
         return blocoEncontrado
     
-
-    def stats(self):
-
-        total = self.tamanho
-        memoria_ocupada = sum(bloco.tamanho for bloco in self.memoria if not bloco.livre)
-        memoria_livre = total - memoria_ocupada
-
-        # Fragmentação externa: quantidade de blocos livres separados
-        buracos = 0
-        for bloco in self.memoria:
-            if bloco.livre:
-                buracos += 1
-
-        uso_efetivo = (memoria_ocupada / total) * 100 if total > 0 else 0
-
-        print("==== Stats =====")
-        print(f"Tamanho total: {total} bytes")
-        print(f"Memoria Ocupada: {memoria_ocupada} bytes")
-        print(f"Memoria Livre: {memoria_livre} bytes")
-        print(f"Quantidade de Buracos (fragmentação externa): {buracos}")
-        print(f"Uso efetivo: {uso_efetivo:.2f}%")
+        # Função para verificar se a memória é apenas um bloco único gigante
+    def memoria_e_bloco_unico(self):
+        if len(self.memoria) != 1:
+            return False
+        bloco = self.memoria[0]
+        return bloco.livre and bloco.id == 0 and bloco.comeco == 0 and bloco.tamanho == self.tamanho

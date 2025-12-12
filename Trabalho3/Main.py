@@ -1,6 +1,6 @@
 # Importando a memoria
 from Memoria import Memoria
-from show import show
+
 # Declarando a memória inicialmente vazia
 memoria = None
 
@@ -60,20 +60,39 @@ while (True):
         # Verificando se a quantidade de argumentos é válida
         if (len(comando) != 2):
             print("ERRO! Número de argumentos inválido para o comando!")
+            continue
 
         # Realizando a liberação do bloco solicitada
         memoria.free_id(int(comando[1]))
 
-    #chamando show
-    elif (comando[0] == 'show'):
+    # Leitura de stats
+    elif (comando[0] == 'stats'):
 
-        # Verificando se existe uma memória para ser alocado
+        # Verificando se existe uma memória pra ver stats
         if (memoria is None):
             print("ERRO! Não existe memória para alocar!")
             continue
 
-        # Importando a função show
-        from show import show
+        # Verificando se a quantidade de argumentos é válida
+        if (len(comando) != 1):
+            print("ERRO! Número de argumentos inválido para o comando!")
+            continue
+
+        # Chamando a função para stats
+        memoria.stats()
+
+    # Leitura de um show
+    elif (comando[0] == 'show'):
+
+        # Verificando se existe uma memória para fazer o show
+        if (memoria is None):
+            print("ERRO! Não existe memória para alocar!")
+            continue
+
+        # Verificando se a quantidade de argumentos é válida
+        if (len(comando) != 1):
+            print("ERRO! Número de argumentos inválido para o comando!")
+            continue
 
         # Mostrando o estado atual da memória
-        show(memoria)
+        memoria.show()
