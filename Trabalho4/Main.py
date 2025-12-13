@@ -23,3 +23,13 @@ def lerPaginas(arquivo: str = "silberschatz2001.trace"):
 
     except FileNotFoundError:
         print("Arquivo não encontrado!")
+
+lerPaginas()
+fifo1, fifo2 = Paginacao.FIFO(execucoes, 2)
+print(f'Faltas de páginas = {fifo1} \nTrocas = {fifo2}')
+
+lru1, lru2 = Paginacao.LRU(execucoes, 2)
+print(f'\nFaltas de páginas = {lru1} \nTrocas = {lru2}')
+
+ot1, ot2 = Paginacao.otimo(execucoes, 2)
+print(f'\nFaltas de páginas = {ot1} \nTrocas = {ot2}')
