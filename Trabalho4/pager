@@ -32,7 +32,8 @@ def main():
     mapa_estrategias = {
         'fifo': Paginacao.fifo,
         'lru': Paginacao.lru,
-        'otimo': Paginacao.otimo
+        'otimo': Paginacao.otimo,
+        'clock': Paginacao.relogio
     }
 
     nome_algo = args.algo.lower()
@@ -42,13 +43,15 @@ def main():
         print("Opções disponíveis:", ", ".join(mapa_estrategias.keys()))
         sys.exit(1)
 
-    funcao_escolhida = mapa_estrategias[nome_algo]
-
-    faltas, trocas, conjunto_residente = Paginacao.paginacao(
-        execucoes, 
-        args.frames, 
-        funcao_escolhida
-    )
+    if nome_algo == 'clock':
+        faltas, trocas, conjunto_residente = Paginacao.relogio(execucoes, args.frames)
+    else:
+        funcao_escolhida = mapa_estrategias[nome_algo]
+        faltas, trocas, conjunto_residente = Paginacao.paginacao(
+            execucoes, 
+            args.frames, 
+            funcao_escolhida
+        )
 
     print(f"Algoritmo: {nome_algo.upper()}")
     print(f"Frames: {args.frames}")
