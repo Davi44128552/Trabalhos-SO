@@ -116,6 +116,45 @@ def NRU(paginasFrames, execucoes, indice_atual):
 
     return vitima
 
+def lfu(paginasFrames, execucoes, indice_atual):
+    """
+    LFU (Least Frequently Used): remove a página com menor frequência de uso
+    A contagem é feita baseada no histórico de execuções até o momento atual
+    """
+    # Inicialização do contador 
+    frequencias = {id_pag: 0 for id_pag in paginasFrames}
+    
+    # Percorre o histórico de execuções
+    # Depois conta quantas vezes cada página foi acessada
+    for i in range(indice_atual):
+        pag = execucoes[i]
+        if pag in frequencias:
+            frequencias[pag] += 1
+            
+    # Vai encontrar a página com a menor frequência
+    pagina_vitima = min(frequencias, key=frequencias.get)
+    
+    return pagina_vitima
+
+def mfu(paginasFrames, execucoes, indice_atual):
+    """
+    MFU (Most Frequently Used): remove a página com maior frequência de uso
+    Lógica inversa ao LFU
+    """
+    # Igual no lfu, inicialização do contador
+    frequencias = {id_pag: 0 for id_pag in paginasFrames}
+    
+    # Conta as frequências no histórico
+    for i in range(indice_atual):
+        pag = execucoes[i]
+        if pag in frequencias:
+            frequencias[pag] += 1
+            
+    # Aqui encontra a página com a maior frequência
+    pagina_vitima = max(frequencias, key=frequencias.get)
+    
+    return pagina_vitima
+
 def relogio(execucoes: list, frames: int):
     
     # Variaveis usadas
