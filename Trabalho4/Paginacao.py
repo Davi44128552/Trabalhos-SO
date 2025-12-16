@@ -63,89 +63,65 @@ def otimo(paginasFrames, execucoes, indice_atual):
             usadosRecente.remove(paginaAtual)
             
     return usadosRecente[0]
-def NRU(execucoes: list, frames: int):
+
+nru_paginas = {}   # id -> Pagina
+nru_acessos = 0
+def NRU(paginasFrames, execucoes, indice_atual):
     """
-    NRU (Not Recently Used):
-    Classe 0: R=0, M=0 (nao referenciada, nao modificada)<- primeira a ser eliminada
-    Classe 1: R=0, M=1 (nao referenciada, modificada)<- segunda vítima
-    Classe 2: R=1, M=0 (referenciada, nao modificada)<- terceira vítima
-    Classe 3: R=1, M=1 (referenciada, modificada)<- última vítima, evitar ao maximo
-    
-    Seleciona aleatoriamente uma vítima da menor classe.
+    Estratégia NRU compatível com paginacao()
+    paginasFrames: lista de INT (ids)
     """
-    memoria = []
-    contFaltas = 0
-    contRemocoes = 0
+
     import random
-    
-    def classificar(p: Pagina) -> int:
-        """
-        Retorna classe 0-3 baseada em bits R e M
-        Classe 0: R=0, M=0
-        Classe 1: R=0, M=1
-        Classe 2: R=1, M=0
-        Classe 3: R=1, M=1
-        """
+    global nru_paginas, nru_acessos
+    nru_acessos += 1
+
+    # Garante que todas as páginas do frame existam como objeto
+    for pid in paginasFrames:
+        if pid not in nru_paginas:
+            nru_paginas[pid] = Pagina(pid)
+
+    # Página atual
+    pid_atual = execucoes[indice_atual]
+
+    # Se página já existe, marca referência
+    if pid_atual in nru_paginas:
+        nru_paginas[pid_atual].bit_referencia = 1
+
+    # Classificação NRU
+    classes = {0: [], 1: [], 2: [], 3: []}
+
+    for pid in paginasFrames:
+        p = nru_paginas[pid]
+
         if p.bit_referencia == 0 and p.bit_modificado == 0:
-            return 0
+            classes[0].append(pid)
         elif p.bit_referencia == 0 and p.bit_modificado == 1:
-            return 1
+            classes[1].append(pid)
         elif p.bit_referencia == 1 and p.bit_modificado == 0:
-            return 2
-        else:  # R=1 e M=1
-            return 3
-    
-    for id_pagina in execucoes:
-        # Verificar se pagina ja esta na memaria
-        encontrou = False
-        for p in memoria:
-            if p == id_pagina:
-                p.bit_referencia = 1  # Marca como referenciada
-                encontrou = True
-                break
-        
-        if encontrou:
-            continue  # Hit: pagina ja estava, nada a fazer
-        
-        # Fault: pagina nao esta na memaria
-        contFaltas += 1
-        pagina_nova = Pagina(id_pagina)
-        
-        # Se memaria nao esta cheia,e nao foi encontrada na memoria, adiciona a pagina
-        if len(memoria) < frames:
-            memoria.append(pagina_nova)
+            classes[2].append(pid)
         else:
-            # Memaria cheia: remover vitima em ordem 0->1->2->3 para dar espaco a nova pagina
-            classes = {0: [], 1: [], 2: [], 3: []}
-            for p in memoria:
-                classe = classificar(p)
-                classes[classe].append(p)
-            
-            # Escolher da menor classe nao-vazia
-            vitima = None
-            for classe in range(4):
-                if classes[classe]:
-                    vitima = random.choice(classes[classe])
-                    break
-            
-            if vitima:
-                memoria.remove(vitima)
-                contRemocoes += 1
-                memoria.append(pagina_nova)
-        
-        # Periodicamente zerar bit de referencia (simula passage de tempo)
-        # Aqui faço a cada ciclo de substituiçao para NRU classico
-        for p in memoria:
-            p.bit_referencia = 0
-    
-    lista_final_ids = [p.id for p in memoria]
-    return contFaltas, contRemocoes, lista_final_ids
+            classes[3].append(pid)
+
+    # Escolhe vítima da menor classe não vazia
+    for c in range(4):
+        if classes[c]:
+            vitima = random.choice(classes[c])
+            break
+
+    # Reset periódico do bit R (simula clock)
+    if nru_acessos % max(1, len(paginasFrames)) == 0:
+        for pid in paginasFrames:
+            nru_paginas[pid].bit_referencia = 0
+
+    return vitima
+
 def relogio(execucoes: list, frames: int):
     
     # Variaveis usadas
     memoria = [] # Lista de objetos Pagina, memória circular
     ponteiro = 0 
-    
+    referencias = 0
     contFaltas = 0 # Contador de faltas de páginas
     contRemocoes = 0 # Contador de remoção de páginas
     qtdExecucoes = len(execucoes)
@@ -183,6 +159,10 @@ def relogio(execucoes: list, frames: int):
                 # Se bit for 1, dá segunda chance e zera o bit
                 if candidata.bit_referencia == 1:
                     candidata.bit_referencia = 0
+                referencias += 1
+                if referencias % max(1, frames) == 0:
+                    for p in memoria:
+                        p.bit_referencia = 0
                     # Avança ponteiro circularmente
                     ponteiro = (ponteiro + 1) % frames 
                 

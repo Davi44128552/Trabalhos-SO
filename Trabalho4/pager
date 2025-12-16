@@ -21,7 +21,7 @@ def ler_arquivo(caminho_arquivo: str):
 
 def main():
     parser = argparse.ArgumentParser(description='Simulador de Paginação')
-    parser.add_argument('--algo', required=True, type=str, help='Algoritmo (fifo, lru, otimo)')
+    parser.add_argument('--algo', required=True, type=str, help='Algoritmo (fifo, lru, otimo, nru)')
     parser.add_argument('--frames', required=True, type=int, help='Número de molduras')
     parser.add_argument('--trace', required=True, type=str, help='Arquivo de trace')
     parser.add_argument('--verbose', action='store_true', help='Detalhes')
@@ -33,7 +33,8 @@ def main():
         'fifo': Paginacao.fifo,
         'lru': Paginacao.lru,
         'otimo': Paginacao.otimo,
-        'clock': Paginacao.relogio
+        'clock': Paginacao.relogio,
+        'nru': Paginacao.NRU
     }
 
     nome_algo = args.algo.lower()
