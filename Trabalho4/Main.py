@@ -25,11 +25,15 @@ def lerPaginas(arquivo: str = "silberschatz2001.trace"):
         print("Arquivo não encontrado!")
 
 lerPaginas()
-fifo1, fifo2 = Paginacao.FIFO(execucoes, 3)
+fifo1, fifo2 = Paginacao.fifo(execucoes, 3)
 print(f'Faltas de páginas = {fifo1} \nTrocas = {fifo2}')
 
-lru1, lru2 = Paginacao.LRU(execucoes, 3)
+lru1, lru2 = Paginacao.lru(execucoes, 3)
 print(f'\nFaltas de páginas = {lru1} \nTrocas = {lru2}')
 
 ot1, ot2 = Paginacao.otimo(execucoes, 3)
 print(f'\nFaltas de páginas = {ot1} \nTrocas = {ot2}')
+
+x = 3
+nru1, nru2, nru_resident = Paginacao.NRU(execucoes, x)
+print(f'\n Algoritmo: NRU \n Frames: {x} \nFaltas de páginas = {nru1} \n Taxa de faltas: {nru1/len(execucoes):.2f} \nEvicções = {nru2} \nConjunto residente final: {nru_resident}')

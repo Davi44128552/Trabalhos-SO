@@ -3,11 +3,13 @@ class Pagina:
     # Atributos
     id: int
     bit_referencia: int 
+    bit_modificado: int #pertencente ao algoritmo NRU
 
     # Construtor
     def __init__(self, id: int):
         self.id = id
         self.bit_referencia = 1 # Ao ser carregada, ganha "uma chance" (bit = 1)
+        self.bit_modificado = 0 # pertencente ao algoritmo NRU
 
     # Método para verificar igualdade
     def __eq__(self, other):
@@ -61,7 +63,83 @@ def otimo(paginasFrames, execucoes, indice_atual):
             usadosRecente.remove(paginaAtual)
             
     return usadosRecente[0]
-
+def NRU(execucoes: list, frames: int):
+    """
+    NRU (Not Recently Used):
+    Classe 0: R=0, M=0 (nao referenciada, nao modificada)<- primeira a ser eliminada
+    Classe 1: R=0, M=1 (nao referenciada, modificada)<- segunda vítima
+    Classe 2: R=1, M=0 (referenciada, nao modificada)<- terceira vítima
+    Classe 3: R=1, M=1 (referenciada, modificada)<- última vítima, evitar ao maximo
+    
+    Seleciona aleatoriamente uma vítima da menor classe.
+    """
+    memoria = []
+    contFaltas = 0
+    contRemocoes = 0
+    import random
+    
+    def classificar(p: Pagina) -> int:
+        """
+        Retorna classe 0-3 baseada em bits R e M
+        Classe 0: R=0, M=0
+        Classe 1: R=0, M=1
+        Classe 2: R=1, M=0
+        Classe 3: R=1, M=1
+        """
+        if p.bit_referencia == 0 and p.bit_modificado == 0:
+            return 0
+        elif p.bit_referencia == 0 and p.bit_modificado == 1:
+            return 1
+        elif p.bit_referencia == 1 and p.bit_modificado == 0:
+            return 2
+        else:  # R=1 e M=1
+            return 3
+    
+    for id_pagina in execucoes:
+        # Verificar se pagina ja esta na memaria
+        encontrou = False
+        for p in memoria:
+            if p == id_pagina:
+                p.bit_referencia = 1  # Marca como referenciada
+                encontrou = True
+                break
+        
+        if encontrou:
+            continue  # Hit: pagina ja estava, nada a fazer
+        
+        # Fault: pagina nao esta na memaria
+        contFaltas += 1
+        pagina_nova = Pagina(id_pagina)
+        
+        # Se memaria nao esta cheia,e nao foi encontrada na memoria, adiciona a pagina
+        if len(memoria) < frames:
+            memoria.append(pagina_nova)
+        else:
+            # Memaria cheia: remover vitima em ordem 0->1->2->3 para dar espaco a nova pagina
+            classes = {0: [], 1: [], 2: [], 3: []}
+            for p in memoria:
+                classe = classificar(p)
+                classes[classe].append(p)
+            
+            # Escolher da menor classe nao-vazia
+            vitima = None
+            for classe in range(4):
+                if classes[classe]:
+                    vitima = random.choice(classes[classe])
+                    break
+            
+            if vitima:
+                memoria.remove(vitima)
+                contRemocoes += 1
+                memoria.append(pagina_nova)
+        
+        # Periodicamente zerar bit de referencia (simula passage de tempo)
+        # Aqui faço a cada ciclo de substituiçao para NRU classico
+        for p in memoria:
+            p.bit_referencia = 0
+    
+    lista_final_ids = [p.id for p in memoria]
+    return contFaltas, contRemocoes, lista_final_ids
 def relogio(execucoes: list, frames: int):
     
     # Variaveis usadas
