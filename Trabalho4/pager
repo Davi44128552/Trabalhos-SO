@@ -34,7 +34,9 @@ def main():
         'lru': Paginacao.lru,
         'otimo': Paginacao.otimo,
         'clock': Paginacao.relogio,
-        'nru': Paginacao.NRU
+        'nru': Paginacao.NRU,
+        'lfu': Paginacao.lfu,  
+        'mfu': Paginacao.mfu  
     }
 
     nome_algo = args.algo.lower()
