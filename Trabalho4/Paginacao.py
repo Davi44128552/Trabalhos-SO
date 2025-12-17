@@ -160,7 +160,6 @@ def relogio(execucoes: list, frames: int):
     # Variaveis usadas
     memoria = [] # Lista de objetos Pagina, memória circular
     ponteiro = 0 
-    referencias = 0
     contFaltas = 0 # Contador de faltas de páginas
     contRemocoes = 0 # Contador de remoção de páginas
     qtdExecucoes = len(execucoes)
@@ -198,10 +197,6 @@ def relogio(execucoes: list, frames: int):
                 # Se bit for 1, dá segunda chance e zera o bit
                 if candidata.bit_referencia == 1:
                     candidata.bit_referencia = 0
-                referencias += 1
-                if referencias % max(1, frames) == 0:
-                    for p in memoria:
-                        p.bit_referencia = 0
                     # Avança ponteiro circularmente
                     ponteiro = (ponteiro + 1) % frames 
                 
