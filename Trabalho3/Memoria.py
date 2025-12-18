@@ -157,11 +157,30 @@ class Memoria:
         memoria_ocupada = sum(bloco.tamanho for bloco in self.memoria if not bloco.livre)
         memoria_livre = total - memoria_ocupada
 
-        # Fragmentação externa: quantidade de blocos livres separados
+        # Percorrendo os blocos livres
+        blocos_livres = []
         buracos = 0
+        memoria_livre = 0
         for bloco in self.memoria:
             if bloco.livre:
+                blocos_livres.append(bloco.tamanho)
+                memoria_livre += bloco.tamanho
                 buracos += 1
+
+        # Calculando a quantidade de buracos
+        # Para esse cálculo, usaremos a fórmula 1 - (maior_bloco / memoria_livre)
+        
+        if (blocos_livres):
+
+            # Pegando o maior bloco livre (em teoria, o contíguo)
+            maior_livre = max(blocos_livres)
+
+            # Calculando a fragmentacao externa
+            fragmentacao_externa = 1 - (maior_livre / memoria_livre)
+
+        else: # Inexistência de blocos lires
+            fragmentacao_externa = 0
+
 
         uso_efetivo = (memoria_ocupada / total) * 100 if total > 0 else 0
 
@@ -169,7 +188,8 @@ class Memoria:
         print(f"Tamanho total: {total} bytes")
         print(f"Memoria Ocupada: {memoria_ocupada} bytes")
         print(f"Memoria Livre: {memoria_livre} bytes")
-        print(f"Quantidade de Buracos (fragmentação externa): {buracos}")
+        print(f"Quantidade de Blocos Livres: {buracos}")
+        print(f"Memória livre fragmentada (por aproximação): {fragmentacao_externa * 100}%")
         print(f"Uso efetivo: {uso_efetivo:.2f}%")
 
     def show(self):
