@@ -1,3 +1,5 @@
+import math
+
 # Classe para os blocos de memória
 class Bloco:
 
@@ -174,11 +176,11 @@ class Memoria:
 
     def show(self):
         print(f"Mapa de Memória (tamanho={self.tamanho})")
-        print("--" * (self.tamanho))
+        print("--" * ((self.tamanho) + 1))
         if (self.memoria_e_bloco_unico()):# Verifica se há apenas um bloco livre que ocupa toda a memória
-            print("[" + " . " * self.tamanho + "]")
-            print("[" + " . " * self.tamanho + "]")
-            print("--" * (self.tamanho))
+            print("[" + ". " * self.tamanho + "]")
+            print("[" + ". " * self.tamanho + "]")
+            print("--" * ((self.tamanho) + 1))
         else:
             # Inicializar listas com '.' para cada byte da memória
             lista1 = ['.'] * self.tamanho
@@ -196,7 +198,55 @@ class Memoria:
             linha2 = "[" + " ".join(lista2) + "]"
             print(linha1)
             print(linha2)
-            print("--" * (self.tamanho))
+            print("--" * ((self.tamanho) + 1))
+
+        # Função para printar bloco
+        def print_block(block: Bloco):
+            status = "Livre" if block.livre else "Ocupado"
+            print(f"Bloco ID: {block.id}, Início: {block.comeco}, Tamanho: {block.tamanho}, Status: {status}")
+            
+        for bloco in self.memoria:
+            print_block(bloco)
+
+    def show_proporcional(self):
+
+        # Definindo um tamanho fixo para a memória
+        largura = 60
+        bpc = math.ceil(self.tamanho / largura) # Bytes por coluna
+        colunas = math.ceil(self.tamanho / bpc)
+
+        print(f"Mapa de Memória (tamanho={self.tamanho})")
+        print("--" * (largura + 1))
+        if (self.memoria_e_bloco_unico()):# Verifica se há apenas um bloco livre que ocupa toda a memória
+            print("[" + ". " * largura + "]")
+            print("[" + ". " * largura + "]")
+            print("--" * (largura + 1))
+        else:
+            # Inicializar listas com '.' para cada byte da memória (seguindo a proporção estabelecida)
+            lista1 = ['.'] * colunas + [' '] * (largura - colunas)
+            lista2 = ['.'] * colunas + [' '] * (largura - colunas)
+
+            
+            # Percorrer os blocos e marcar as posições
+            for bloco in self.memoria:
+
+                if bloco.livre:
+                    continue
+
+                inicio = bloco.comeco // bpc
+                fim = (bloco.comeco + bloco.tamanho - 1) // bpc
+
+                for i in range(inicio, min(fim + 1, colunas)):
+                    if not bloco.livre:  # Se o bloco está ocupado
+                        lista1[i] = '#'
+                        lista2[i] = str(bloco.id % 10)
+            
+            # Montar as linhas com espaços entre os caracteres
+            linha1 = "[" + " ".join(lista1) + "]"
+            linha2 = "[" + " ".join(lista2) + "]"
+            print(linha1)
+            print(linha2)
+            print("--" * (largura + 1))
 
         # Função para printar bloco
         def print_block(block: Bloco):
