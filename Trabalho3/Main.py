@@ -19,7 +19,10 @@ def help():
     print("stats - Mostra os status da memória")
 
     # Show
-    print("show - Mostra o mapa de memória e os blocos existentes")
+    print("show - Mostra o mapa de memória e os blocos existentes pelo tamanho da memória")
+
+    # Show proporcional
+    print("showp - Mostra o mapa de memória em que a memória tem um tamanho específico")
 
     # Help
     print("help - Mostra novamente os comandos")
@@ -148,6 +151,22 @@ def main():
 
             # Caso esteja tudo certo, executamos o comando
             memoria.show()
+
+        # Mostrar o mapa de memória
+        elif (comando[0] == 'showp'):
+
+            # Verificando se existe uma memória para mostrar seu mapa
+            if (memoria is None):
+                print("ERRO! Não existe memória para mostrar mapa!")
+                continue
+
+            # Verificando se a quantidade de argumentos é válida
+            if (len(comando) != 1):
+                print("ERRO! Número de argumentos inválido para o comando!")
+                continue
+
+            # Caso esteja tudo certo, executamos o comando
+            memoria.show_proporcional()
 
 # Executando a main
 if __name__ == "__main__":
