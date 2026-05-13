@@ -38,7 +38,7 @@ O minishell possui os seguintes comandos:
 No segundo trabalho, são implementados em python os algoritmos de escalonamento de tarefas que são responsáveis por controlar a execução de processos no sistema operacional, juntamente a uma interface gráfica que ajuda a entender como cada algoritmo executa.
 
 Os algoritmos implementados podem ser vistos na lista abaixo:
-- _First Come, First Served (FCFS)_: Algoritmo que funciona como uma FILA, em que os primeiros procesoss a chegarem serão os primeiros a sair;
+- _First Come, First Served (FCFS)_: Algoritmo que funciona como uma FILA, em que os primeiros processos a chegarem serão os primeiros a sair;
 - _Shortest Job First (SJF)_: Na medida que os processos vão entrando, o sistema dá prioridade àqueles que tem o menor tempo total de execução;
 - _Shortest Remaining Time First (SRTF)_: Uma versão preemptiva de SJF, o algoritmo SRTF dá prioridade aos processos que tem o menor tempo de execução restante;
 - _PRIOc_: Este algoritmo dá prioridade às tarefas que tem maior prioridade para serem executados, e, que os próximos serão escolhidos quando o que está rodando finaliza;
